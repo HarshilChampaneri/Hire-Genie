@@ -1,8 +1,8 @@
-package com.harshil_infotech.hire_genie.util.prompts;
+package com.harshil_infotech.hire_genie.prompts.user_prompts;
 
-public class DefaultUserPrompt {
+public class DefaultUserSkillPrompt {
 
-    public static final String defaultUserPrompt = """
+    public static final String defaultUserSkillPrompt = """
             I am a Java Developer with an experience over 4 years.
             I have hands-on experience building the architectural systems that scales in security, ai powered backend systems.
             With hands-on experience of building secured, scalable and industry-ready backend systems using Microservices Architecture that scales at an enterprise level, my core skills include:

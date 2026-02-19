@@ -1,7 +1,8 @@
 package com.harshil_infotech.hire_genie.controller;
 
+import com.harshil_infotech.hire_genie.dto.response.SkillSummaryResponse;
 import com.harshil_infotech.hire_genie.service.AiService;
-import com.harshil_infotech.hire_genie.util.prompts.DefaultUserPrompt;
+import com.harshil_infotech.hire_genie.prompts.user_prompts.DefaultUserSkillPrompt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,14 +18,21 @@ public class AiController {
     private final AiService aiService;
 
     @GetMapping("/provide/skills/summary")
-    public ResponseEntity<String> getSkillSummary(
+    public ResponseEntity<SkillSummaryResponse> getSkillSummary(
             @RequestParam(
                     name = "text",
-                    defaultValue = DefaultUserPrompt.defaultUserPrompt,
+                    defaultValue = DefaultUserSkillPrompt.defaultUserSkillPrompt,
                     required = false
             ) String text
     ) {
         return ResponseEntity.ok(aiService.provideSkillSummary(text));
     }
+
+//    public ResponseEntity<String> getProjectSummary(
+//            @RequestParam(
+//                    name = "text",
+//                    defaultValue =
+//            )
+//    )
 
 }
