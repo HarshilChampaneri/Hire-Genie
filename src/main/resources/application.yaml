@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: hire-genie
+
+# AI-Configurations
+  ai:
+    google:
+      genai:
+        api-key: ${GOOGLE_GENAI_APIKEY}
+        chat:
+          options:
+            model: gemini-3-flash-preview
+            temperature: 0.7
