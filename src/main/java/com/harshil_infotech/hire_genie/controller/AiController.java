@@ -28,11 +28,4 @@ public class AiController {
         return ResponseEntity.ok(aiService.provideSkillSummary(text));
     }
 
-//    public ResponseEntity<String> getProjectSummary(
-//            @RequestParam(
-//                    name = "text",
-//                    defaultValue =
-//            )
-//    )
-
 }

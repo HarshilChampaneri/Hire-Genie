@@ -23,10 +23,7 @@ public class SkillSystemPrompt {
                 "technicalSkills": {
                     "<Category Name>": ["skill1", "skill2"],
                     "<Category Name>": ["skill1", "skill2"]
-                },
-                "domainExpertise": ["domain1", "domain2"],
-                "softSkills": ["skill1", "skill2"],
-                "experienceLevel": "Mid-Level"
+                }
             }
             
             For INVALID INPUT, respond with:

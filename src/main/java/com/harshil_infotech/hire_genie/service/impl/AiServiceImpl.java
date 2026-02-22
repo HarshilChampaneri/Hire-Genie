@@ -35,12 +35,9 @@ public class AiServiceImpl implements AiService {
         if (jsonResponse != null) {
             return converter.convert(jsonResponse);
         } else {
-            return new SkillSummaryResponse(
-                    null,
-                    null,
-                    null,
-                    null
-            );
+            return SkillSummaryResponse.builder()
+                    .technicalSkills(null)
+                    .build();
         }
 
     }
