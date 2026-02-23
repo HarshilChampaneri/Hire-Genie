@@ -1,6 +1,6 @@
 package com.harshil_infotech.hire_genie.annotation;
 
-import com.harshil_infotech.hire_genie.dto.request.ProjectRequest;
+import com.harshil_infotech.hire_genie.dto.project.request.ProjectRequest;
 import jakarta.validation.ConstraintValidator;
 
 import jakarta.validation.ConstraintValidatorContext;

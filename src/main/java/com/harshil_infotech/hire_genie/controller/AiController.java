@@ -1,6 +1,6 @@
 package com.harshil_infotech.hire_genie.controller;
 
-import com.harshil_infotech.hire_genie.dto.response.SkillSummaryResponse;
+import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryResponse;
 import com.harshil_infotech.hire_genie.service.AiService;
 import com.harshil_infotech.hire_genie.prompts.user_prompts.DefaultUserSkillPrompt;
 import lombok.RequiredArgsConstructor;

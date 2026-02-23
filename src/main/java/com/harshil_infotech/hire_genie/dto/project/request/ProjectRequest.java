@@ -1,4 +1,4 @@
-package com.harshil_infotech.hire_genie.dto.request;
+package com.harshil_infotech.hire_genie.dto.project.request;
 
 import com.harshil_infotech.hire_genie.annotation.ValidProjectEndDate;
 import jakarta.validation.constraints.NotBlank;

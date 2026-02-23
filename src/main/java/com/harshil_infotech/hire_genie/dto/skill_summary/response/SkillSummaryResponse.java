@@ -1,4 +1,4 @@
-package com.harshil_infotech.hire_genie.dto.response;
+package com.harshil_infotech.hire_genie.dto.skill_summary.response;
 
 import lombok.Builder;
 

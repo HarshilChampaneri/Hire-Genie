@@ -1,4 +1,4 @@
-package com.harshil_infotech.hire_genie.dto.request;
+package com.harshil_infotech.hire_genie.dto.project.request;
 
 import jakarta.validation.Valid;
 

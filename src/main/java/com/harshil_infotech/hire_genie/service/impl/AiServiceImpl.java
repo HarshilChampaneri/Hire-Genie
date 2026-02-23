@@ -1,6 +1,6 @@
 package com.harshil_infotech.hire_genie.service.impl;
 
-import com.harshil_infotech.hire_genie.dto.response.SkillSummaryResponse;
+import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryResponse;
 import com.harshil_infotech.hire_genie.service.AiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
