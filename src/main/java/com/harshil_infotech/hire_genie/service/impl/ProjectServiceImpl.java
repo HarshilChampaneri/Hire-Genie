@@ -6,6 +6,7 @@ import com.harshil_infotech.hire_genie.dto.project.response.ProjectResponse;
 import com.harshil_infotech.hire_genie.dto.project.response.ProjectResponseList;
 import com.harshil_infotech.hire_genie.exception.InvalidProjectDateRangeException;
 import com.harshil_infotech.hire_genie.exception.ProjectEndDateRequiredException;
+import com.harshil_infotech.hire_genie.exception.ResourceNotFoundException;
 import com.harshil_infotech.hire_genie.mapper.ProjectMapper;
 import com.harshil_infotech.hire_genie.model.Project;
 import com.harshil_infotech.hire_genie.repository.ProjectRepository;
@@ -42,6 +43,7 @@ public class ProjectServiceImpl implements ProjectService {
                     throw new InvalidProjectDateRangeException();
                 }
             }
+            project.setIsProjectDeleted(false);
         }
 
         return projectRepository.saveAll(projects)
@@ -56,7 +58,7 @@ public class ProjectServiceImpl implements ProjectService {
         List<Project> projects = projectRepository.findAll();
 
         List<ProjectResponse> projectResponseList = projects.stream()
-                .filter(project -> Boolean.TRUE.equals(project.getIsProjectDeleted()))
+                .filter(project -> Boolean.FALSE.equals(project.getIsProjectDeleted()))
                 .map(projectMapper::toProjectResponseFromProject)
                 .toList();
 
@@ -68,35 +70,39 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse updateProject(Long projectId, ProjectRequest projectRequest) {
 
-//        TODO: Need to handle the custom exception here!
         Project project = projectRepository.findById(projectId).orElseThrow(() ->
-                new RuntimeException("Project with projectId : " + projectId + " not found."));
+                new ResourceNotFoundException("Project", projectId));
+        log.info("Project with projectId : " + projectId + " found successfully.");
 
         Project mappedProject = projectMapper.toProjectFromProjectRequest(projectRequest);
+        log.info("Mapping of dto to entity done successfully.");
 
-        if (!project.getIsProjectInProgress().equals(mappedProject.getIsProjectInProgress())) {
+        if (mappedProject.getIsProjectInProgress() != null && !project.getIsProjectInProgress().equals(mappedProject.getIsProjectInProgress())) {
             project.setIsProjectInProgress(mappedProject.getIsProjectInProgress());
         }
-        if (!project.getProjectDescription().equals(mappedProject.getProjectDescription())) {
+        if (mappedProject.getProjectDescription() != null && !project.getProjectDescription().equals(mappedProject.getProjectDescription())) {
             project.setProjectDescription(mappedProject.getProjectDescription());
         }
-        if (!project.getProjectName().equals(mappedProject.getProjectName())) {
+        if (mappedProject.getProjectName() != null && !project.getProjectName().equals(mappedProject.getProjectName())) {
             project.setProjectName(mappedProject.getProjectName());
         }
-        if (!project.getProjectUrl().equals(mappedProject.getProjectUrl())) {
+        if (mappedProject.getProjectUrl() != null && !project.getProjectUrl().equals(mappedProject.getProjectUrl())) {
             project.setProjectUrl(mappedProject.getProjectUrl());
         }
-        if (!project.getProjectEndDate().equals(mappedProject.getProjectEndDate())) {
+        if (mappedProject.getProjectEndDate() != null && !project.getProjectEndDate().equals(mappedProject.getProjectEndDate())) {
             project.setProjectEndDate(mappedProject.getProjectEndDate());
         }
-        if (!project.getProjectStartDate().equals(mappedProject.getProjectStartDate())) {
+        if (mappedProject.getProjectStartDate() != null && !project.getProjectStartDate().equals(mappedProject.getProjectStartDate())) {
             project.setProjectStartDate(mappedProject.getProjectStartDate());
         }
-        if (!project.getProjectTechStacks().equals(mappedProject.getProjectTechStacks())) {
+        if (mappedProject.getProjectTechStacks() != null && !project.getProjectTechStacks().equals(mappedProject.getProjectTechStacks())) {
             project.setProjectTechStacks(mappedProject.getProjectTechStacks());
         }
+        project.setIsProjectDeleted(false);
+        log.info("Values updated successfully in the project.");
 
         project = projectRepository.save(project);
+        log.info("Updated project saved successfully. Returning the Response.");
 
         return projectMapper.toProjectResponseFromProject(project);
     }
@@ -104,9 +110,12 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public String deleteProject(Long projectId) {
 
-//        TODO: Need to handle the custom exception here!
         Project project = projectRepository.findById(projectId).orElseThrow(() ->
-                new RuntimeException("Project with projectId: " + projectId + " not found."));
+                new ResourceNotFoundException("Project", projectId));
+
+        if (project.getIsProjectDeleted()) {
+            return "Project with projectId: " + projectId + " is already deleted Before.";
+        }
 
         project.setIsProjectDeleted(true);
         projectRepository.save(project);

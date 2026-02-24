@@ -13,10 +13,10 @@ public class ProjectMapper {
         boolean inProgress = Boolean.TRUE.equals(projectRequest.isProjectInProgress());
 
         return Project.builder()
-                .projectName(projectRequest.projectName())
-                .projectUrl(projectRequest.projectUrl())
-                .projectTechStacks(projectRequest.projectTechStacks())
-                .projectStartDate(projectRequest.projectStartDate())
+                .projectName(projectRequest.projectName() != null ? projectRequest.projectName() : null)
+                .projectUrl(projectRequest.projectUrl() != null ? projectRequest.projectUrl() : null)
+                .projectTechStacks(!projectRequest.projectTechStacks().isEmpty() ? projectRequest.projectTechStacks() : null)
+                .projectStartDate(projectRequest.projectStartDate() != null ? projectRequest.projectStartDate() : null)
 
                 //user -> code-understanding : null -> false, false -> false, true -> true
                 .isProjectInProgress(inProgress)
@@ -24,7 +24,7 @@ public class ProjectMapper {
                         ? null
                         : projectRequest.projectEndDate()
                 )
-                .projectDescription(projectRequest.projectDescription())
+                .projectDescription(!projectRequest.projectDescription().isEmpty() ? projectRequest.projectDescription() : null)
                 .build();
     }
 

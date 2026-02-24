@@ -33,7 +33,7 @@ public class Project {
     @Column(nullable = false)
     private YearMonth projectStartDate;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
+    @Column(nullable = false)
     private Boolean isProjectInProgress;
 
     private YearMonth projectEndDate;
@@ -41,7 +41,7 @@ public class Project {
     @Column(nullable = false)
     private List<String> projectDescription;
 
-    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT false")
+    @Column(nullable = false)
     private Boolean isProjectDeleted;
 
 }
