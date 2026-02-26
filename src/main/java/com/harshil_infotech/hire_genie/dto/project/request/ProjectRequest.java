@@ -18,7 +18,7 @@ public record ProjectRequest(
         @NotBlank
         @Length(
                 min = 2,
-                max = 30,
+                max = 150,
                 message = "Name of the project must be between 2 to 30 characters"
         )
         String projectName,

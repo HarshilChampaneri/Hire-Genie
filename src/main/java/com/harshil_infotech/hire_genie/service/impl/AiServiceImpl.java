@@ -1,6 +1,10 @@
 package com.harshil_infotech.hire_genie.service.impl;
 
+import com.harshil_infotech.hire_genie.dto.project.response.ProjectDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryResponse;
+import com.harshil_infotech.hire_genie.exception.ResourceNotFoundException;
+import com.harshil_infotech.hire_genie.model.Project;
+import com.harshil_infotech.hire_genie.repository.ProjectRepository;
 import com.harshil_infotech.hire_genie.service.AiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,6 +12,9 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
+import static com.harshil_infotech.hire_genie.prompts.system_prompts.ProjectDescriptionPrompt.projectDescriptionSystemPrompt;
 import static com.harshil_infotech.hire_genie.prompts.system_prompts.SkillSystemPrompt.skillSystemPrompt;
 
 @Slf4j
@@ -16,6 +23,7 @@ import static com.harshil_infotech.hire_genie.prompts.system_prompts.SkillSystem
 public class AiServiceImpl implements AiService {
 
     private final ChatClient chatClient;
+    private final ProjectRepository projectRepository;
 
     @Override
     public SkillSummaryResponse provideSkillSummary(String text) {
@@ -39,7 +47,50 @@ public class AiServiceImpl implements AiService {
                     .technicalSkills(null)
                     .build();
         }
-
     }
 
+    @Override
+    public ProjectDescriptionResponse rewriteProjectDescriptionWithAi(Long projectId) {
+
+        log.warn("Fetching Project.");
+        Project project = projectRepository.findById(projectId).orElseThrow(() ->
+                new ResourceNotFoundException("Project", projectId));
+        log.warn("Project fetched successfully.");
+
+
+        List<String> projectDescription = project.getProjectDescription();
+        log.warn("Fetched Project Description");
+
+        String userProjectDescription = String.join(" ", projectDescription);
+
+        BeanOutputConverter<ProjectDescriptionResponse> converter =
+                new BeanOutputConverter<>(ProjectDescriptionResponse.class);
+
+        String userMessage = userProjectDescription + "\n\n" + converter.getFormat();
+
+        String aiProjectDescriptionResponse = chatClient
+                .prompt()
+                .system(projectDescriptionSystemPrompt)
+                .user(userMessage)
+                .call()
+                .content();
+
+        log.debug("Raw ai response: {}", aiProjectDescriptionResponse);
+
+        if (aiProjectDescriptionResponse != null) {
+            ProjectDescriptionResponse projectDescriptionResponse =
+                    converter.convert(aiProjectDescriptionResponse);
+            List<String> finalResponse = projectDescriptionResponse.projectDescription();
+
+            log.warn("Returning final Response");
+            project.setProjectDescription(finalResponse);
+            projectRepository.save(project);
+
+            return projectDescriptionResponse;
+        }
+
+        return ProjectDescriptionResponse.builder()
+                .projectDescription(null)
+                .build();
+    }
 }

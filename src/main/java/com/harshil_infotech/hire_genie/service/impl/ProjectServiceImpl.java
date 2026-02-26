@@ -68,6 +68,18 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    public ProjectResponse getProjectById(Long projectId) {
+        Project project = projectRepository.findById(projectId).orElseThrow(() ->
+                new ResourceNotFoundException("Project", projectId));
+
+        if (project.getIsProjectDeleted()) {
+            throw new ResourceNotFoundException("Project", projectId);
+        }
+
+        return projectMapper.toProjectResponseFromProject(project);
+    }
+
+    @Override
     public ProjectResponse updateProject(Long projectId, ProjectRequest projectRequest) {
 
         Project project = projectRepository.findById(projectId).orElseThrow(() ->

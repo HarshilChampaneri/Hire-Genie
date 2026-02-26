@@ -13,6 +13,8 @@ public interface ProjectService {
 
     ProjectResponseList getAllProjects();
 
+    ProjectResponse getProjectById(Long projectId);
+
     ProjectResponse updateProject(Long projectId, @Valid ProjectRequest projectRequest);
 
     String deleteProject(Long projectId);

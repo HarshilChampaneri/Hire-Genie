@@ -1,14 +1,12 @@
 package com.harshil_infotech.hire_genie.controller;
 
+import com.harshil_infotech.hire_genie.dto.project.response.ProjectDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryResponse;
 import com.harshil_infotech.hire_genie.service.AiService;
 import com.harshil_infotech.hire_genie.prompts.user_prompts.DefaultUserSkillPrompt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +24,13 @@ public class AiController {
             ) String text
     ) {
         return ResponseEntity.ok(aiService.provideSkillSummary(text));
+    }
+
+    @PutMapping("/rewirte-pd-with-ai/{projectId}")
+    public ResponseEntity<ProjectDescriptionResponse> rewriteProjectDescriptionWithAI(
+            @PathVariable Long projectId
+    ) {
+        return ResponseEntity.ok(aiService.rewriteProjectDescriptionWithAi(projectId));
     }
 
 }
