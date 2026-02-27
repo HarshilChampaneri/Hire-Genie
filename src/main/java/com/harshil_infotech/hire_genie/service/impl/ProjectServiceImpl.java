@@ -4,8 +4,8 @@ import com.harshil_infotech.hire_genie.dto.project.request.ProjectRequest;
 import com.harshil_infotech.hire_genie.dto.project.request.ProjectRequestList;
 import com.harshil_infotech.hire_genie.dto.project.response.ProjectResponse;
 import com.harshil_infotech.hire_genie.dto.project.response.ProjectResponseList;
-import com.harshil_infotech.hire_genie.exception.InvalidProjectDateRangeException;
-import com.harshil_infotech.hire_genie.exception.ProjectEndDateRequiredException;
+import com.harshil_infotech.hire_genie.exception.InvalidDateRangeException;
+import com.harshil_infotech.hire_genie.exception.EndDateRequiredException;
 import com.harshil_infotech.hire_genie.exception.ResourceNotFoundException;
 import com.harshil_infotech.hire_genie.mapper.ProjectMapper;
 import com.harshil_infotech.hire_genie.model.Project;
@@ -37,10 +37,10 @@ public class ProjectServiceImpl implements ProjectService {
         for (Project project : projects) {
             if (Boolean.FALSE.equals(project.getIsProjectInProgress())) {
                 if (project.getProjectEndDate() == null) {
-                    throw new ProjectEndDateRequiredException();
+                    throw new EndDateRequiredException("project");
                 }
                 if (project.getProjectEndDate().isBefore(project.getProjectStartDate())) {
-                    throw new InvalidProjectDateRangeException();
+                    throw new InvalidDateRangeException("project");
                 }
             }
             project.setIsProjectDeleted(false);
@@ -53,9 +53,13 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    public ProjectResponseList getAllProjects() {
+    public ProjectResponseList getAllProjects() throws Exception {
 
         List<Project> projects = projectRepository.findAll();
+
+        if (projects.isEmpty()) {
+            throw new Exception("No Projects Found");
+        }
 
         List<ProjectResponse> projectResponseList = projects.stream()
                 .filter(project -> Boolean.FALSE.equals(project.getIsProjectDeleted()))
@@ -85,6 +89,10 @@ public class ProjectServiceImpl implements ProjectService {
         Project project = projectRepository.findById(projectId).orElseThrow(() ->
                 new ResourceNotFoundException("Project", projectId));
         log.info("Project with projectId : " + projectId + " found successfully.");
+
+        if (project.getIsProjectDeleted()) {
+            throw new ResourceNotFoundException("Project", projectId);
+        }
 
         Project mappedProject = projectMapper.toProjectFromProjectRequest(projectRequest);
         log.info("Mapping of dto to entity done successfully.");

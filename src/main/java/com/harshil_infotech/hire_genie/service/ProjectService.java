@@ -11,7 +11,7 @@ import java.util.List;
 public interface ProjectService {
     List<ProjectResponse> addProjects(@Valid ProjectRequestList projectRequestList);
 
-    ProjectResponseList getAllProjects();
+    ProjectResponseList getAllProjects() throws Exception;
 
     ProjectResponse getProjectById(Long projectId);
 

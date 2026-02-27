@@ -19,7 +19,7 @@ public record ProjectRequest(
         @Length(
                 min = 2,
                 max = 150,
-                message = "Name of the project must be between 2 to 30 characters"
+                message = "Name of the project must be between 2 to 150 characters"
         )
         String projectName,
 

@@ -1,8 +1,8 @@
 package com.harshil_infotech.hire_genie.exception.handler;
 
 import com.harshil_infotech.hire_genie.dto.error.response.ErrorResponse;
-import com.harshil_infotech.hire_genie.exception.InvalidProjectDateRangeException;
-import com.harshil_infotech.hire_genie.exception.ProjectEndDateRequiredException;
+import com.harshil_infotech.hire_genie.exception.InvalidDateRangeException;
+import com.harshil_infotech.hire_genie.exception.EndDateRequiredException;
 import com.harshil_infotech.hire_genie.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
@@ -13,19 +13,19 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(ProjectEndDateRequiredException.class)
+    @ExceptionHandler(EndDateRequiredException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public ErrorResponse handleProjectEndDateRequiredException (
-            ProjectEndDateRequiredException e,
+            EndDateRequiredException e,
             HttpServletRequest request
     ) {
         return ErrorResponse.of(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage(), request.getRequestURI());
     }
 
-    @ExceptionHandler(InvalidProjectDateRangeException.class)
+    @ExceptionHandler(InvalidDateRangeException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_ENTITY)
     public ErrorResponse handleInvalidProjectDateRangeException (
-            InvalidProjectDateRangeException e,
+            InvalidDateRangeException e,
             HttpServletRequest request
     ) {
         return ErrorResponse.of(HttpStatus.UNPROCESSABLE_ENTITY, e.getMessage(), request.getRequestURI());
@@ -38,7 +38,7 @@ public class GlobalExceptionHandler {
             Exception e,
             HttpServletRequest request
     ) {
-        return ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred. Please try again later.", request.getRequestURI());
+        return ErrorResponse.of(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), request.getRequestURI());
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)

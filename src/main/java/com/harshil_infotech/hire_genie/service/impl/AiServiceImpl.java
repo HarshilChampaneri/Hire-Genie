@@ -1,9 +1,13 @@
 package com.harshil_infotech.hire_genie.service.impl;
 
+import com.harshil_infotech.hire_genie.dto.experience.response.ExperienceDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.project.response.ProjectDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryResponse;
 import com.harshil_infotech.hire_genie.exception.ResourceNotFoundException;
+import com.harshil_infotech.hire_genie.model.Experience;
 import com.harshil_infotech.hire_genie.model.Project;
+import com.harshil_infotech.hire_genie.prompts.system_prompts.ExperienceDescriptionPrompt;
+import com.harshil_infotech.hire_genie.repository.ExperienceRepository;
 import com.harshil_infotech.hire_genie.repository.ProjectRepository;
 import com.harshil_infotech.hire_genie.service.AiService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.harshil_infotech.hire_genie.prompts.system_prompts.ExperienceDescriptionPrompt.experienceDescriptionSystemPrompt;
 import static com.harshil_infotech.hire_genie.prompts.system_prompts.ProjectDescriptionPrompt.projectDescriptionSystemPrompt;
 import static com.harshil_infotech.hire_genie.prompts.system_prompts.SkillSystemPrompt.skillSystemPrompt;
 
@@ -24,6 +29,7 @@ public class AiServiceImpl implements AiService {
 
     private final ChatClient chatClient;
     private final ProjectRepository projectRepository;
+    private final ExperienceRepository experienceRepository;
 
     @Override
     public SkillSummaryResponse provideSkillSummary(String text) {
@@ -57,6 +63,9 @@ public class AiServiceImpl implements AiService {
                 new ResourceNotFoundException("Project", projectId));
         log.warn("Project fetched successfully.");
 
+        if (project.getIsProjectDeleted()) {
+            throw new ResourceNotFoundException("project", projectId);
+        }
 
         List<String> projectDescription = project.getProjectDescription();
         log.warn("Fetched Project Description");
@@ -91,6 +100,48 @@ public class AiServiceImpl implements AiService {
 
         return ProjectDescriptionResponse.builder()
                 .projectDescription(null)
+                .build();
+    }
+
+    public ExperienceDescriptionResponse rewriteExperienceDescriptionWithAi(Long experienceId) {
+
+        Experience experience = experienceRepository.findById(experienceId).orElseThrow(() ->
+                new ResourceNotFoundException("experience", experienceId));
+
+        if (experience.getIsExperienceDeleted()) {
+            throw new ResourceNotFoundException("experience", experienceId);
+        }
+
+        List<String> experienceDescription = experience.getDescription();
+
+        String userExperienceDescription = String.join(" ", experienceDescription);
+
+        BeanOutputConverter<ExperienceDescriptionResponse> converter =
+                new BeanOutputConverter<>(ExperienceDescriptionResponse.class);
+
+        String userMessage = userExperienceDescription + "\n\n" + converter.getFormat();
+
+        String aiExperienceDescriptionResponse = chatClient
+                .prompt()
+                .system(experienceDescriptionSystemPrompt)
+                .user(userMessage)
+                .call()
+                .content();
+
+        if (aiExperienceDescriptionResponse != null) {
+            ExperienceDescriptionResponse experienceDescriptionResponse =
+                    converter.convert(aiExperienceDescriptionResponse);
+            List<String> finalResponse = experienceDescriptionResponse.experienceDescription();
+
+            log.warn("Returning final Response");
+            experience.setDescription(finalResponse);
+            experienceRepository.save(experience);
+
+            return experienceDescriptionResponse;
+        }
+
+        return ExperienceDescriptionResponse.builder()
+                .experienceDescription(null)
                 .build();
     }
 }
