@@ -6,7 +6,6 @@ import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryRe
 import com.harshil_infotech.hire_genie.exception.ResourceNotFoundException;
 import com.harshil_infotech.hire_genie.model.Experience;
 import com.harshil_infotech.hire_genie.model.Project;
-import com.harshil_infotech.hire_genie.prompts.system_prompts.ExperienceDescriptionPrompt;
 import com.harshil_infotech.hire_genie.repository.ExperienceRepository;
 import com.harshil_infotech.hire_genie.repository.ProjectRepository;
 import com.harshil_infotech.hire_genie.service.AiService;
@@ -103,6 +102,7 @@ public class AiServiceImpl implements AiService {
                 .build();
     }
 
+    @Override
     public ExperienceDescriptionResponse rewriteExperienceDescriptionWithAi(Long experienceId) {
 
         Experience experience = experienceRepository.findById(experienceId).orElseThrow(() ->

@@ -27,7 +27,7 @@ public class ProjectController {
     }
 
     @GetMapping("/projects")
-    public ResponseEntity<ProjectResponseList> getAllProjects() {
+    public ResponseEntity<ProjectResponseList> getAllProjects() throws Exception {
         return ResponseEntity.ok(projectService.getAllProjects());
     }
 
