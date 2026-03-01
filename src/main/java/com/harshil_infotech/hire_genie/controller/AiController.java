@@ -1,6 +1,7 @@
 package com.harshil_infotech.hire_genie.controller;
 
 import com.harshil_infotech.hire_genie.dto.experience.response.ExperienceDescriptionResponse;
+import com.harshil_infotech.hire_genie.dto.other.response.OtherDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.project.response.ProjectDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryResponse;
 import com.harshil_infotech.hire_genie.service.AiService;
@@ -39,6 +40,13 @@ public class AiController {
             @PathVariable Long experienceId
     ) {
         return ResponseEntity.ok(aiService.rewriteExperienceDescriptionWithAi(experienceId));
+    }
+
+    @PutMapping("/rewrite-other-section-description-with-ai/{otherId}")
+    public ResponseEntity<OtherDescriptionResponse> rewriteOtherSectionDescriptionWithAi(
+            @PathVariable Long otherId
+    ) {
+        return ResponseEntity.ok(aiService.rewriteOtherSectionDescriptionWithAi(otherId));
     }
 
 }

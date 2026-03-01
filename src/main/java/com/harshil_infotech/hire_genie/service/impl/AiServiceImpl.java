@@ -1,12 +1,15 @@
 package com.harshil_infotech.hire_genie.service.impl;
 
 import com.harshil_infotech.hire_genie.dto.experience.response.ExperienceDescriptionResponse;
+import com.harshil_infotech.hire_genie.dto.other.response.OtherDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.project.response.ProjectDescriptionResponse;
 import com.harshil_infotech.hire_genie.dto.skill_summary.response.SkillSummaryResponse;
 import com.harshil_infotech.hire_genie.exception.ResourceNotFoundException;
 import com.harshil_infotech.hire_genie.model.Experience;
+import com.harshil_infotech.hire_genie.model.Other;
 import com.harshil_infotech.hire_genie.model.Project;
 import com.harshil_infotech.hire_genie.repository.ExperienceRepository;
+import com.harshil_infotech.hire_genie.repository.OtherRepository;
 import com.harshil_infotech.hire_genie.repository.ProjectRepository;
 import com.harshil_infotech.hire_genie.service.AiService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import static com.harshil_infotech.hire_genie.prompts.system_prompts.ExperienceDescriptionPrompt.experienceDescriptionSystemPrompt;
+import static com.harshil_infotech.hire_genie.prompts.system_prompts.OtherDescriptionPrompt.otherDescriptionSystemPrompt;
 import static com.harshil_infotech.hire_genie.prompts.system_prompts.ProjectDescriptionPrompt.projectDescriptionSystemPrompt;
 import static com.harshil_infotech.hire_genie.prompts.system_prompts.SkillSystemPrompt.skillSystemPrompt;
 
@@ -29,6 +33,7 @@ public class AiServiceImpl implements AiService {
     private final ChatClient chatClient;
     private final ProjectRepository projectRepository;
     private final ExperienceRepository experienceRepository;
+    private final OtherRepository otherRepository;
 
     @Override
     public SkillSummaryResponse provideSkillSummary(String text) {
@@ -142,6 +147,47 @@ public class AiServiceImpl implements AiService {
 
         return ExperienceDescriptionResponse.builder()
                 .experienceDescription(null)
+                .build();
+    }
+
+    @Override
+    public OtherDescriptionResponse rewriteOtherSectionDescriptionWithAi(Long otherId) {
+
+        Other other = otherRepository.findById(otherId).orElseThrow(() ->
+                new ResourceNotFoundException("other", otherId));
+
+        if (other.getIsDeleted()) {
+            throw new ResourceNotFoundException("other", otherId);
+        }
+
+        List<String> otherDescription = other.getDescription();
+
+        String concatenatedOtherDescription = String.join(" ", otherDescription);
+
+        BeanOutputConverter<OtherDescriptionResponse> converter =
+                new BeanOutputConverter<>(OtherDescriptionResponse.class);
+
+        String userMessage = concatenatedOtherDescription + "\n\n" + converter.getFormat();
+
+        String aiResponse = chatClient
+                .prompt()
+                .system(otherDescriptionSystemPrompt)
+                .user(userMessage)
+                .call()
+                .content();
+
+        if (aiResponse != null) {
+            OtherDescriptionResponse otherDescriptionResponse = converter.convert(aiResponse);
+            List<String> finalResponse = otherDescriptionResponse.otherDescription();
+
+            other.setDescription(finalResponse);
+            otherRepository.save(other);
+
+            return otherDescriptionResponse;
+        }
+
+        return OtherDescriptionResponse.builder()
+                .otherDescription(null)
                 .build();
     }
 }
