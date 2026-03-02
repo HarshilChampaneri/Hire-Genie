@@ -1,0 +1,9 @@
+package com.hire_genie.resume_builder.repository;
+
+import com.hire_genie.resume_builder.model.Education;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface EducationRepository extends JpaRepository<Education, Long> {
+}
