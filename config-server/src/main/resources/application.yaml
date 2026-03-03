@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: config-server
+
+  cloud:
+    config.server.git:
+      uri: https://github.com/HarshilChampaneri/hire-genie-config-repo
+      username: HarshilChampaneri
+      password: ${GITHUB_PERSONAL_ACCESS_TOKEN}
+      default-label: main
+
+server:
+  port: 8888
