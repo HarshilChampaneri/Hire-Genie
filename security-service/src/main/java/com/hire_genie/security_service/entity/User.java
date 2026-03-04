@@ -1,10 +1,11 @@
-package com.hire_genie.security_service;
+package com.hire_genie.security_service.entity;
 
-import jakarta.persistence.Id;
+import com.hire_genie.security_service.enums.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -26,5 +27,7 @@ public class User {
     private String password;
 
     private Set<Role> roles;
+
+    private Boolean isActive = true;
 
 }

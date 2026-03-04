@@ -1,4 +1,9 @@
 package com.hire_genie.security_service.dto;
 
-public record AuthResponse() {
+import lombok.Builder;
+
+@Builder
+public record AuthResponse(
+        String token
+) {
 }
