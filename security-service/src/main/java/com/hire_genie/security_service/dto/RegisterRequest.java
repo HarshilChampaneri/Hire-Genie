@@ -19,6 +19,8 @@ public record RegisterRequest(
         String password,
 
         @NotEmpty
-        Set<Role> roles
+        Set<Role> roles,
+
+        String adminSecret
 ) {
 }
