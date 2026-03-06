@@ -8,6 +8,7 @@ import com.hire_genie.resume_builder.service.ProjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/resumes")
 @RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ROLE_EMPLOYEE', 'ROLE_RECRUITER', 'ROLE_ADMIN')")
 public class ProjectController {
 
     private final ProjectService projectService;

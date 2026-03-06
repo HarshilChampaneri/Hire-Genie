@@ -8,11 +8,13 @@ import com.hire_genie.resume_builder.prompts.user_prompts.DefaultUserSkillPrompt
 import com.hire_genie.resume_builder.service.AiService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/resumes")
+@PreAuthorize("hasAnyRole('ROLE_EMPLOYEE', 'ROLE_RECRUITER', 'ROLE_ADMIN')")
 public class AiController {
 
     private final AiService aiService;
