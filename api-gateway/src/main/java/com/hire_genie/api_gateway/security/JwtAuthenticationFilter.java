@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -20,6 +21,9 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+
+    @Value("${app.security.internal-secret}")
+    private String headerSecret;
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/security/auth/login",
@@ -56,6 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Propagate identity to downstream services
             mutableRequest.addHeader("X-User-Email", jwtService.extractUsername(token));
             mutableRequest.addHeader("X-User-Roles", jwtService.extractRoles(token));
+            mutableRequest.addHeader("X-Internal-Secret", headerSecret);
 
             filterChain.doFilter(mutableRequest, response);
         } catch (Exception e) {

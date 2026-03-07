@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/resumes")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ROLE_EMPLOYEE', 'ROLE_RECRUITER', 'ROLE_ADMIN')")
+@PreAuthorize("hasAnyRole('EMPLOYEE', 'RECRUITER', 'ADMIN')")
 public class OtherController {
 
     private final OtherService otherService;

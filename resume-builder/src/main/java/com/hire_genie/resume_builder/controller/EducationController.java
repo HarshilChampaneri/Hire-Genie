@@ -16,7 +16,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/resumes")
 @RequiredArgsConstructor
-@PreAuthorize("hasAnyRole('ROLE_EMPLOYEE', 'ROLE_RECRUITER', 'ROLE_ADMIN')")
+@PreAuthorize("hasAnyRole('EMPLOYEE', 'RECRUITER', 'ADMIN')")
 public class EducationController {
 
     private final EducationService educationService;
