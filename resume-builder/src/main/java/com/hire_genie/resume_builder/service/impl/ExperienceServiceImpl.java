@@ -10,6 +10,7 @@ import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
 import com.hire_genie.resume_builder.mapper.ExperienceMapper;
 import com.hire_genie.resume_builder.model.Experience;
 import com.hire_genie.resume_builder.repository.ExperienceRepository;
+import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.ExperienceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class ExperienceServiceImpl implements ExperienceService {
 
     private final ExperienceRepository experienceRepository;
     private final ExperienceMapper experienceMapper;
+    private final LoggedInUser loggedInUser;
 
     @Override
     public List<ExperienceResponse> addExperiences(ExperienceRequestList experienceRequestList) {
@@ -44,6 +46,7 @@ public class ExperienceServiceImpl implements ExperienceService {
                 }
             }
             experience.setIsExperienceDeleted(false);
+            experience.setUserEmail(loggedInUser.getCurrentLoggedInUser());
         }
 
         return experienceRepository.saveAll(experiences)
@@ -56,14 +59,14 @@ public class ExperienceServiceImpl implements ExperienceService {
     @Override
     public ExperienceResponseList getAllExperiences() throws Exception {
 
-        List<Experience> experiences = experienceRepository.findAll();
+        List<Experience> experiences = experienceRepository.findActiveExperiences(loggedInUser.getCurrentLoggedInUser());
 
         if (experiences.isEmpty()) {
             throw new Exception("No Experiences Found");
         }
 
         List<ExperienceResponse> experienceResponseList = experiences.stream()
-                .filter(experience -> Boolean.FALSE.equals(experience.getIsExperienceDeleted()))
+//                .filter(experience -> Boolean.FALSE.equals(experience.getIsExperienceDeleted()))
                 .map(experienceMapper::toExperienceResponseFromExperience)
                 .toList();
 
@@ -75,8 +78,11 @@ public class ExperienceServiceImpl implements ExperienceService {
 
     @Override
     public ExperienceResponse getExperienceById(Long experienceId) {
-        Experience experience = experienceRepository.findById(experienceId).orElseThrow(() ->
-                new ResourceNotFoundException("experience", experienceId));
+
+        Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
+                experienceId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
             throw new ResourceNotFoundException("experience", experienceId);
@@ -88,8 +94,10 @@ public class ExperienceServiceImpl implements ExperienceService {
     @Override
     public ExperienceResponse updateExperience(Long experienceId, ExperienceRequest experienceRequest) {
 
-        Experience experience = experienceRepository.findById(experienceId).orElseThrow(() ->
-                new ResourceNotFoundException("experience", experienceId));
+        Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
+                experienceId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
             throw new ResourceNotFoundException("experience", experienceId);
@@ -125,8 +133,10 @@ public class ExperienceServiceImpl implements ExperienceService {
     @Override
     public String deleteExperience(Long experienceId) {
 
-        Experience experience = experienceRepository.findById(experienceId).orElseThrow(() ->
-                new ResourceNotFoundException("experience", experienceId));
+        Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
+                experienceId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
             return "Experience with experienceId: " + experienceId + " is already deleted Before.";

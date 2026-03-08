@@ -6,6 +6,7 @@ import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
 import com.hire_genie.resume_builder.mapper.OtherMapper;
 import com.hire_genie.resume_builder.model.Other;
 import com.hire_genie.resume_builder.repository.OtherRepository;
+import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.OtherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,12 +19,14 @@ public class OtherServiceImpl implements OtherService {
 
     private final OtherRepository otherRepository;
     private final OtherMapper otherMapper;
+    private final LoggedInUser loggedInUser;
 
     @Override
     public OtherResponse addOthers(OtherRequest otherRequest) {
 
         Other other = otherMapper.toOtherFromOtherRequest(otherRequest);
         other.setIsDeleted(false);
+        other.setUserEmail(loggedInUser.getCurrentLoggedInUser());
 
         return otherMapper.toOtherResponseFromOther(otherRepository.save(other));
     }
@@ -31,8 +34,10 @@ public class OtherServiceImpl implements OtherService {
     @Override
     public OtherResponse getOtherById(Long otherId) {
 
-        Other other = otherRepository.findById(otherId).orElseThrow(() ->
-                new ResourceNotFoundException("other", otherId));
+        Other other = otherRepository.findByOtherIdAndUserEmail(
+                otherId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("other", otherId));
 
         if (other.getIsDeleted()) {
             throw new ResourceNotFoundException("other", otherId);
@@ -45,8 +50,10 @@ public class OtherServiceImpl implements OtherService {
     @Override
     public OtherResponse updateOtherById(Long otherId, OtherRequest otherRequest) {
 
-        Other other = otherRepository.findById(otherId).orElseThrow(() ->
-                new ResourceNotFoundException("other", otherId));
+        Other other = otherRepository.findByOtherIdAndUserEmail(
+                otherId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("other", otherId));
 
         if (other.getIsDeleted()) {
             throw new ResourceNotFoundException("other", otherId);
@@ -63,8 +70,10 @@ public class OtherServiceImpl implements OtherService {
     @Override
     public String deleteOtherById(Long otherId) {
 
-        Other other = otherRepository.findById(otherId).orElseThrow(() ->
-                new ResourceNotFoundException("other", otherId));
+        Other other = otherRepository.findByOtherIdAndUserEmail(
+                otherId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("other", otherId));
 
         if (other.getIsDeleted()) {
             return "Other with otherId: " + otherId + " is already deleted Before.";

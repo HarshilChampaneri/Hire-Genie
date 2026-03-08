@@ -43,4 +43,7 @@ public class Education {
 
     private Boolean isEducationDeleted = false;
 
+    @Column(nullable = false)
+    private String userEmail;
+
 }

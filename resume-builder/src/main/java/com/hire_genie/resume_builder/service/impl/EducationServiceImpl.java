@@ -10,6 +10,7 @@ import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
 import com.hire_genie.resume_builder.mapper.EducationMapper;
 import com.hire_genie.resume_builder.model.Education;
 import com.hire_genie.resume_builder.repository.EducationRepository;
+import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.EducationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class EducationServiceImpl implements EducationService {
 
     private final EducationRepository educationRepository;
     private final EducationMapper educationMapper;
+    private final LoggedInUser loggedInUser;
 
     @Override
     public List<EducationResponse> addEducations(EducationRequestList educationRequestList) {
@@ -44,6 +46,7 @@ public class EducationServiceImpl implements EducationService {
                 }
             }
             education.setIsEducationDeleted(false);
+            education.setUserEmail(loggedInUser.getCurrentLoggedInUser());
         }
 
         return educationRepository.saveAll(educations)
@@ -56,14 +59,14 @@ public class EducationServiceImpl implements EducationService {
     @Override
     public EducationResponseList getAllEducations() throws Exception {
 
-        List<Education> educations = educationRepository.findAll();
+        List<Education> educations = educationRepository.findActiveEducations(loggedInUser.getCurrentLoggedInUser());
 
         if (educations.isEmpty()) {
             throw new Exception("No educations Found");
         }
 
         List<EducationResponse> educationResponseList = educations.stream()
-                .filter(education -> Boolean.FALSE.equals(education.getIsEducationDeleted()))
+//                .filter(education -> Boolean.FALSE.equals(education.getIsEducationDeleted()))
                 .map(educationMapper::toEducationResponseFromEducation)
                 .toList();
 
@@ -75,8 +78,11 @@ public class EducationServiceImpl implements EducationService {
 
     @Override
     public EducationResponse getEducationById(Long educationId) {
-        Education education = educationRepository.findById(educationId).orElseThrow(() ->
-                new ResourceNotFoundException("education", educationId));
+
+        Education education = educationRepository.findByEducationIdAndUserEmail(
+                educationId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("education", educationId));
 
         if (education.getIsEducationDeleted()) {
             throw new ResourceNotFoundException("education", educationId);
@@ -88,8 +94,10 @@ public class EducationServiceImpl implements EducationService {
     @Override
     public EducationResponse updateEducation(Long educationId, EducationRequest educationRequest) {
 
-        Education education = educationRepository.findById(educationId).orElseThrow(() ->
-                new ResourceNotFoundException("education", educationId));
+        Education education = educationRepository.findByEducationIdAndUserEmail(
+                educationId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("education", educationId));
 
         if (education.getIsEducationDeleted()) {
             throw new ResourceNotFoundException("education", educationId);
@@ -131,8 +139,10 @@ public class EducationServiceImpl implements EducationService {
     @Override
     public String deleteEducation(Long educationId) {
 
-        Education education = educationRepository.findById(educationId).orElseThrow(() ->
-                new ResourceNotFoundException("education", educationId));
+        Education education = educationRepository.findByEducationIdAndUserEmail(
+                educationId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("education", educationId));
 
         if (education.getIsEducationDeleted()) {
             return "Education with educationId: " + educationId + " is already deleted Before.";

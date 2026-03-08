@@ -8,6 +8,7 @@ import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
 import com.hire_genie.resume_builder.mapper.CertificateMapper;
 import com.hire_genie.resume_builder.model.Certificate;
 import com.hire_genie.resume_builder.repository.CertificateRepository;
+import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.CertificateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,11 +23,14 @@ public class CertificateServiceImpl implements CertificateService {
 
     private final CertificateRepository certificateRepository;
     private final CertificateMapper certificateMapper;
+    private final LoggedInUser loggedInUser;
 
     @Override
     public List<CertificateResponse> addCertificates(
             CertificateRequestList certificateRequestList
     ) {
+
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
 
         List<Certificate> certificates = certificateRequestList
                 .certificateRequests()
@@ -36,6 +40,7 @@ public class CertificateServiceImpl implements CertificateService {
 
         for (Certificate certificate : certificates) {
             certificate.setIsCertificateDeleted(false);
+            certificate.setUserEmail(userEmail);
         }
 
         return certificateRepository.saveAll(certificates)
@@ -48,7 +53,7 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     public CertificateResponseList getAllCertificates() throws Exception {
 
-        List<Certificate> certificates = certificateRepository.findAll();
+        List<Certificate> certificates = certificateRepository.findActiveCertificates(loggedInUser.getCurrentLoggedInUser());
 
         if (certificates.isEmpty()) {
             throw new Exception("No certificates Found");
@@ -56,7 +61,7 @@ public class CertificateServiceImpl implements CertificateService {
 
         List<CertificateResponse> certificateResponses = certificates
                 .stream()
-                .filter(c -> Boolean.FALSE.equals(c.getIsCertificateDeleted()))
+//                .filter(c -> Boolean.FALSE.equals(c.getIsCertificateDeleted()))
                 .map(certificateMapper::toCertificateResponseFromCertificate)
                 .toList();
 
@@ -68,8 +73,10 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     public CertificateResponse getCertificateById(Long certificateId) {
 
-        Certificate certificate = certificateRepository.findById(certificateId).orElseThrow(() ->
-                new ResourceNotFoundException("certificate", certificateId));
+        Certificate certificate = certificateRepository.findByCertificateIdAndUserEmail(
+                certificateId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("certificate", certificateId));
 
         if (certificate.getIsCertificateDeleted()) {
             throw new ResourceNotFoundException("certificate", certificateId);
@@ -82,8 +89,10 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     public CertificateResponse updateCertificate(Long certificateId, CertificateRequest certificateRequest) {
 
-        Certificate certificate = certificateRepository.findById(certificateId).orElseThrow(() ->
-                new ResourceNotFoundException("certificate", certificateId));
+        Certificate certificate = certificateRepository.findByCertificateIdAndUserEmail(
+                certificateId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("certificate", certificateId));
 
         if (certificate.getIsCertificateDeleted()) {
             throw new ResourceNotFoundException("certificate", certificateId);
@@ -103,8 +112,10 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     public String deleteCertificate(Long certificateId) {
 
-        Certificate certificate = certificateRepository.findById(certificateId).orElseThrow(() ->
-                new ResourceNotFoundException("certificate", certificateId));
+        Certificate certificate = certificateRepository.findByCertificateIdAndUserEmail(
+                certificateId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("certificate", certificateId));
 
         if (certificate.getIsCertificateDeleted()) {
             return "Certificate with certificateId: " + certificateId + " is already deleted Before.";

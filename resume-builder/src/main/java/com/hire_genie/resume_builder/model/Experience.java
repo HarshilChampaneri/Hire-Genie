@@ -41,4 +41,7 @@ public class Experience {
     @Column(nullable = false)
     private Boolean isExperienceDeleted = false;
 
+    @Column(nullable = false)
+    private String userEmail;
+
 }

@@ -27,4 +27,7 @@ public class Certificate {
     @Column(nullable = false)
     private Boolean isCertificateDeleted = false;
 
+    @Column(nullable = false)
+    private String userEmail;
+
 }

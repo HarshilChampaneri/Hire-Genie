@@ -11,10 +11,10 @@ import java.util.List;
 
 @Data
 @Entity
-@Table(name = "projects")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "projects")
 public class Project {
 
     @Id
@@ -43,5 +43,8 @@ public class Project {
 
     @Column(nullable = false)
     private Boolean isProjectDeleted;
+
+    @Column(nullable = false)
+    private String userEmail;
 
 }

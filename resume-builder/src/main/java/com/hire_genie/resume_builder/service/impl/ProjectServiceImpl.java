@@ -10,6 +10,7 @@ import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
 import com.hire_genie.resume_builder.mapper.ProjectMapper;
 import com.hire_genie.resume_builder.model.Project;
 import com.hire_genie.resume_builder.repository.ProjectRepository;
+import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final ProjectMapper projectMapper;
+    private final LoggedInUser loggedInUser;
 
     @Override
     public List<ProjectResponse> addProjects(ProjectRequestList projectRequestList) {
@@ -44,6 +46,7 @@ public class ProjectServiceImpl implements ProjectService {
                 }
             }
             project.setIsProjectDeleted(false);
+            project.setUserEmail(loggedInUser.getCurrentLoggedInUser());
         }
 
         return projectRepository.saveAll(projects)
@@ -55,14 +58,14 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponseList getAllProjects() throws Exception {
 
-        List<Project> projects = projectRepository.findAll();
+        List<Project> projects = projectRepository.findActiveProjects(loggedInUser.getCurrentLoggedInUser());
 
         if (projects.isEmpty()) {
             throw new Exception("No Projects Found");
         }
 
         List<ProjectResponse> projectResponseList = projects.stream()
-                .filter(project -> Boolean.FALSE.equals(project.getIsProjectDeleted()))
+//                .filter(project -> Boolean.FALSE.equals(project.getIsProjectDeleted()))
                 .map(projectMapper::toProjectResponseFromProject)
                 .toList();
 
@@ -73,8 +76,11 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     public ProjectResponse getProjectById(Long projectId) {
-        Project project = projectRepository.findById(projectId).orElseThrow(() ->
-                new ResourceNotFoundException("Project", projectId));
+
+        Project project = projectRepository.findByProjectIdAndUserEmail(
+                projectId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
 
         if (project.getIsProjectDeleted()) {
             throw new ResourceNotFoundException("Project", projectId);
@@ -86,8 +92,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse updateProject(Long projectId, ProjectRequest projectRequest) {
 
-        Project project = projectRepository.findById(projectId).orElseThrow(() ->
-                new ResourceNotFoundException("Project", projectId));
+        Project project = projectRepository.findByProjectIdAndUserEmail(
+                projectId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
         log.info("Project with projectId : " + projectId + " found successfully.");
 
         if (project.getIsProjectDeleted()) {
@@ -130,8 +138,10 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public String deleteProject(Long projectId) {
 
-        Project project = projectRepository.findById(projectId).orElseThrow(() ->
-                new ResourceNotFoundException("Project", projectId));
+        Project project = projectRepository.findByProjectIdAndUserEmail(
+                projectId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
 
         if (project.getIsProjectDeleted()) {
             return "Project with projectId: " + projectId + " is already deleted Before.";

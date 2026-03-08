@@ -26,4 +26,7 @@ public class Other {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
+    @Column(nullable = false)
+    private String userEmail;
+
 }
