@@ -27,8 +27,12 @@ public record EducationRequest(
         @NotNull(message = "Education start date can't be null.")
         YearMonth startDate,
         Boolean isEducationInProgress,
+
+        @NotNull(message = "Education end date can't be null.")
         YearMonth endDate,
+
         String gradeTitle,
+
         Double grades
 ) {
 }

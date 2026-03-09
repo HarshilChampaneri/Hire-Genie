@@ -35,6 +35,7 @@ public class Education {
     @Column(nullable = false)
     private Boolean isEducationInProgress = false;
 
+    @Column(nullable = false)
     private YearMonth endDate;
 
     private String gradeTitle;

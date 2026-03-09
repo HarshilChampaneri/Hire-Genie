@@ -130,6 +130,7 @@ public class EducationServiceImpl implements EducationService {
             education.setGradeTitle(mappedEducation.getGradeTitle());
         }
         education.setIsEducationDeleted(false);
+        education.setUserEmail(loggedInUser.getCurrentLoggedInUser());
 
         education = educationRepository.save(education);
 

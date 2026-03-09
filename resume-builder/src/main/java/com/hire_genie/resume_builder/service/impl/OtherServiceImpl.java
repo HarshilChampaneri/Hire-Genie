@@ -62,6 +62,8 @@ public class OtherServiceImpl implements OtherService {
         if (!otherRequest.description().isEmpty() && !otherRequest.description().equals(other.getDescription())) {
             other.setDescription(otherRequest.description());
         }
+        other.setIsDeleted(false);
+        other.setUserEmail(loggedInUser.getCurrentLoggedInUser());
 
         return otherMapper.toOtherResponseFromOther(otherRepository.save(other));
 

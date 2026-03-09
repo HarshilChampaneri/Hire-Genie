@@ -127,6 +127,7 @@ public class ProjectServiceImpl implements ProjectService {
             project.setProjectTechStacks(mappedProject.getProjectTechStacks());
         }
         project.setIsProjectDeleted(false);
+        project.setUserEmail(loggedInUser.getCurrentLoggedInUser());
         log.info("Values updated successfully in the project.");
 
         project = projectRepository.save(project);

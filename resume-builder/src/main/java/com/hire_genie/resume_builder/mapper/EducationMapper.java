@@ -18,7 +18,7 @@ public class EducationMapper {
                 .isEducationInProgress(isInProgress)
                 .educationTitle(educationRequest.educationTitle() != null ? educationRequest.educationTitle() : null)
                 .startDate(educationRequest.startDate() != null ? educationRequest.startDate() : null)
-                .endDate(isInProgress ? null : educationRequest.endDate())
+                .endDate(educationRequest.endDate() != null ? educationRequest.endDate() : null)
                 .fieldOfStudy(educationRequest.fieldOfStudy() != null ? educationRequest.fieldOfStudy() : null)
                 .location(educationRequest.location() != null ? educationRequest.location() : null)
                 .build();

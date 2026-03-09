@@ -124,6 +124,7 @@ public class ExperienceServiceImpl implements ExperienceService {
             experience.setEndDate(mappedExperience.getEndDate());
         }
         experience.setIsExperienceDeleted(false);
+        experience.setUserEmail(loggedInUser.getCurrentLoggedInUser());
 
         experience = experienceRepository.save(experience);
 

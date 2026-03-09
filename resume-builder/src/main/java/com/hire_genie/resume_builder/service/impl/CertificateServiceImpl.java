@@ -104,6 +104,8 @@ public class CertificateServiceImpl implements CertificateService {
         if (certificateRequest.certificateUrl() != null && !certificateRequest.certificateUrl().equals(certificate.getCertificateUrl())) {
             certificate.setCertificateUrl(certificateRequest.certificateUrl());
         }
+        certificate.setIsCertificateDeleted(false);
+        certificate.setUserEmail(loggedInUser.getCurrentLoggedInUser());
 
         return certificateMapper.toCertificateResponseFromCertificate(certificateRepository.save(certificate));
 

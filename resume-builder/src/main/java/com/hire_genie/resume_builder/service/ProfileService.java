@@ -1,0 +1,14 @@
+package com.hire_genie.resume_builder.service;
+
+import com.hire_genie.resume_builder.dto.profile.request.ProfileRequest;
+import com.hire_genie.resume_builder.dto.profile.response.ProfileResponse;
+
+public interface ProfileService {
+    ProfileResponse addNewProfile(ProfileRequest profileRequest) throws Exception;
+
+    ProfileResponse getYourProfile() throws Exception;
+
+    ProfileResponse updateYourProfile(ProfileRequest profileRequest);
+
+    String deleteYourProfile() throws Exception;
+}
