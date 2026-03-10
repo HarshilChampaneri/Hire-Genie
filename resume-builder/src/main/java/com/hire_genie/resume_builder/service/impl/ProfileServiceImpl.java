@@ -53,16 +53,16 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public ProfileResponse updateYourProfile(ProfileRequest profileRequest) {
+    public ProfileResponse updateYourProfile(ProfileRequest profileRequest) throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
 
         Profile existingProfile = profileRepository.findExistingProfile(userEmail);
+        if (existingProfile == null) {
+            throw new Exception("No profile found");
+        }
         Profile updatedProfile = profileMapper.toProfileFromProfileRequest(profileRequest);
 
-        if (!updatedProfile.getProfileSummary().isEmpty() && !existingProfile.getProfileSummary().equals(updatedProfile.getProfileSummary())) {
-            existingProfile.setProfileSummary(updatedProfile.getProfileSummary());
-        }
         if (!updatedProfile.getEmail().isEmpty() && !existingProfile.getEmail().equals(updatedProfile.getEmail())) {
             existingProfile.setEmail(updatedProfile.getEmail());
         }

@@ -32,7 +32,7 @@ public class ProfileController {
     @PutMapping("/profile")
     public ResponseEntity<ProfileResponse> updateProfile(
             @RequestBody @Valid ProfileRequest profileRequest
-    ) {
+    ) throws Exception {
         return ResponseEntity.ok(profileService.updateYourProfile(profileRequest));
     }
 

@@ -35,9 +35,6 @@ public class Profile {
     @Column(nullable = false)
     private Set<String> urls;
 
-    @Column(nullable = false, length = 350)
-    private String profileSummary;
-
     @Column(nullable = false)
     private String userEmail;
 

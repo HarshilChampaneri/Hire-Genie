@@ -8,7 +8,7 @@ public interface ProfileService {
 
     ProfileResponse getYourProfile() throws Exception;
 
-    ProfileResponse updateYourProfile(ProfileRequest profileRequest);
+    ProfileResponse updateYourProfile(ProfileRequest profileRequest) throws Exception;
 
     String deleteYourProfile() throws Exception;
 }

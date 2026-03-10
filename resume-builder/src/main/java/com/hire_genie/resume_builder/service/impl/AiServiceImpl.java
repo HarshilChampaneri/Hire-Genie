@@ -2,15 +2,14 @@ package com.hire_genie.resume_builder.service.impl;
 
 import com.hire_genie.resume_builder.dto.experience.response.ExperienceDescriptionResponse;
 import com.hire_genie.resume_builder.dto.other.response.OtherDescriptionResponse;
+import com.hire_genie.resume_builder.dto.profileSummary.response.ProfileSummaryResponse;
 import com.hire_genie.resume_builder.dto.project.response.ProjectDescriptionResponse;
 import com.hire_genie.resume_builder.dto.skill_summary.response.SkillSummaryResponse;
 import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
-import com.hire_genie.resume_builder.model.Experience;
-import com.hire_genie.resume_builder.model.Other;
-import com.hire_genie.resume_builder.model.Project;
-import com.hire_genie.resume_builder.repository.ExperienceRepository;
-import com.hire_genie.resume_builder.repository.OtherRepository;
-import com.hire_genie.resume_builder.repository.ProjectRepository;
+import com.hire_genie.resume_builder.mapper.ProfileSummaryMapper;
+import com.hire_genie.resume_builder.model.*;
+import com.hire_genie.resume_builder.repository.*;
+import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.AiService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +21,7 @@ import java.util.List;
 
 import static com.hire_genie.resume_builder.prompts.system_prompts.ExperienceDescriptionPrompt.experienceDescriptionSystemPrompt;
 import static com.hire_genie.resume_builder.prompts.system_prompts.OtherDescriptionPrompt.otherDescriptionSystemPrompt;
+import static com.hire_genie.resume_builder.prompts.system_prompts.ProfileSummaryPrompt.profileSummarySystemPrompt;
 import static com.hire_genie.resume_builder.prompts.system_prompts.ProjectDescriptionPrompt.projectDescriptionSystemPrompt;
 import static com.hire_genie.resume_builder.prompts.system_prompts.SkillSystemPrompt.skillSystemPrompt;
 
@@ -34,6 +34,9 @@ public class AiServiceImpl implements AiService {
     private final ProjectRepository projectRepository;
     private final ExperienceRepository experienceRepository;
     private final OtherRepository otherRepository;
+    private final ProfileSummaryRepository profileSummaryRepository;
+    private final ProfileSummaryMapper profileSummaryMapper;
+    private final LoggedInUser loggedInUser;
 
     @Override
     public SkillSummaryResponse provideSkillSummary(String text) {
@@ -190,4 +193,30 @@ public class AiServiceImpl implements AiService {
                 .otherDescription(null)
                 .build();
     }
+
+    public ProfileSummaryResponse rewriteProfileSummaryWithAi() throws Exception {
+
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
+
+        ProfileSummary profileSummary = profileSummaryRepository.findExistingProfileSummary(userEmail);
+        if (profileSummary == null) {
+            throw new Exception("No Profile Summary found. Please Proceed with Generate Profile Summary.");
+        }
+
+        String userProfileSummary = profileSummary.getProfileSummary();
+
+        String aiResponse = chatClient
+                .prompt()
+                .system(profileSummarySystemPrompt)
+                .user(userProfileSummary)
+                .call()
+                .content();
+
+        profileSummary.setProfileSummary(aiResponse);
+        profileSummary.setUserEmail(userEmail);
+        profileSummary.setIsProfileSummaryDeleted(false);
+
+        return profileSummaryMapper.toProfileSummaryResponseFromProfileSummary(profileSummaryRepository.save(profileSummary));
+    }
+
 }

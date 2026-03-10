@@ -11,7 +11,6 @@ public class ProfileMapper {
     public Profile toProfileFromProfileRequest(ProfileRequest profileRequest) {
 
         return Profile.builder()
-                .profileSummary(profileRequest.profileSummary() != null ? profileRequest.profileSummary() : null)
                 .urls(!profileRequest.urls().isEmpty() ? profileRequest.urls() : null)
                 .email(profileRequest.email() != null ? profileRequest.email() : null)
                 .fullName(profileRequest.fullName() != null ? profileRequest.fullName() : null)
@@ -25,7 +24,6 @@ public class ProfileMapper {
 
         return ProfileResponse.builder()
                 .profileId(profile.getProfileId())
-                .profileSummary(profile.getProfileSummary())
                 .urls(profile.getUrls())
                 .email(profile.getEmail())
                 .mobileNo(profile.getMobileNo())
