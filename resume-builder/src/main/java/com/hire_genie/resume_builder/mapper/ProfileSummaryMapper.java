@@ -10,14 +10,14 @@ public class ProfileSummaryMapper {
 
     public ProfileSummary toProfileSummaryFromProfileSummaryRequest(ProfileSummaryRequest profileSummaryRequest) {
         return ProfileSummary.builder()
-                .profileSummary(profileSummaryRequest.profileSummary() != null ? profileSummaryRequest.profileSummary() : null)
+                .description(profileSummaryRequest.profileSummary() != null ? profileSummaryRequest.profileSummary() : null)
                 .build();
     }
 
     public ProfileSummaryResponse toProfileSummaryResponseFromProfileSummary(ProfileSummary profileSummary) {
         return ProfileSummaryResponse.builder()
                 .profileSummaryId(profileSummary.getProfileSummaryId())
-                .profileSummary(profileSummary.getProfileSummary())
+                .profileSummary(profileSummary.getDescription())
                 .build();
     }
 

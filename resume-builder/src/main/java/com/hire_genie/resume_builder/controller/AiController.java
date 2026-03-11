@@ -2,6 +2,7 @@ package com.hire_genie.resume_builder.controller;
 
 import com.hire_genie.resume_builder.dto.experience.response.ExperienceDescriptionResponse;
 import com.hire_genie.resume_builder.dto.other.response.OtherDescriptionResponse;
+import com.hire_genie.resume_builder.dto.profileSummary.response.ProfileSummaryResponse;
 import com.hire_genie.resume_builder.dto.project.response.ProjectDescriptionResponse;
 import com.hire_genie.resume_builder.dto.skill_summary.response.SkillSummaryResponse;
 import com.hire_genie.resume_builder.prompts.user_prompts.DefaultUserSkillPrompt;
@@ -19,7 +20,7 @@ public class AiController {
 
     private final AiService aiService;
 
-    @GetMapping("/provide/skills/summary")
+    @PutMapping("/provide/skills/summary")
     public ResponseEntity<SkillSummaryResponse> getSkillSummary(
             @RequestParam(
                     name = "text",
@@ -49,6 +50,16 @@ public class AiController {
             @PathVariable Long otherId
     ) {
         return ResponseEntity.ok(aiService.rewriteOtherSectionDescriptionWithAi(otherId));
+    }
+
+    @PutMapping("/rewrite-profile-summary-with-ai")
+    public ResponseEntity<ProfileSummaryResponse> rewriteProfileSummaryWithAi() throws Exception {
+        return ResponseEntity.ok(aiService.rewriteProfileSummaryWithAi());
+    }
+
+    @PostMapping("/generate-profile-summary-with-ai")
+    public ResponseEntity<ProfileSummaryResponse> generateProfileSummaryWithAi() throws Exception {
+        return ResponseEntity.ok(aiService.generateProfileSummaryWithAi());
     }
 
 }

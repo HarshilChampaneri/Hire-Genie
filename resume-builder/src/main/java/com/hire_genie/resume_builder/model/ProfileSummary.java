@@ -19,7 +19,7 @@ public class ProfileSummary {
     private Long profileSummaryId;
 
     @Column(nullable = false, length = 350)
-    private String profileSummary;
+    private String description;
 
     @Column(nullable = false)
     private String userEmail;

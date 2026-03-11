@@ -62,8 +62,8 @@ public class ProfileSummaryServiceImpl implements ProfileSummaryService {
 
         ProfileSummary updatedProfileSummary = profileSummaryMapper.toProfileSummaryFromProfileSummaryRequest(profileSummaryRequest);
 
-        if (!updatedProfileSummary.getProfileSummary().isEmpty() && !existingProfileSummary.getProfileSummary().equals(updatedProfileSummary.getProfileSummary())) {
-            existingProfileSummary.setProfileSummary(updatedProfileSummary.getProfileSummary());
+        if (!updatedProfileSummary.getDescription().isEmpty() && !existingProfileSummary.getDescription().equals(updatedProfileSummary.getDescription())) {
+            existingProfileSummary.setDescription(updatedProfileSummary.getDescription());
         }
         existingProfileSummary.setIsProfileSummaryDeleted(false);
         existingProfileSummary.setUserEmail(userEmail);

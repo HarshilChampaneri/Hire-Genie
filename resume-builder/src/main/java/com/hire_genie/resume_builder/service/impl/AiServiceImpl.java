@@ -31,6 +31,7 @@ import static com.hire_genie.resume_builder.prompts.system_prompts.SkillSystemPr
 public class AiServiceImpl implements AiService {
 
     private final ChatClient chatClient;
+    private final SkillRepository skillRepository;
     private final ProjectRepository projectRepository;
     private final ExperienceRepository experienceRepository;
     private final OtherRepository otherRepository;
@@ -41,20 +42,35 @@ public class AiServiceImpl implements AiService {
     @Override
     public SkillSummaryResponse provideSkillSummary(String text) {
 
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
+
+        Skill skill = skillRepository.findActiveSkill(userEmail);
+
         BeanOutputConverter<SkillSummaryResponse> converter =
                 new BeanOutputConverter<>(SkillSummaryResponse.class);
 
-        String jsonResponse = chatClient
-                .prompt()
-                .system(skillSystemPrompt)
-                .user(text)
-                .call()
-                .content();
+        String jsonResponse = generateAIResponses(skillSystemPrompt, text);
 
         log.debug("Raw JSON Response: {}", jsonResponse);
 
         if (jsonResponse != null) {
-            return converter.convert(jsonResponse);
+            SkillSummaryResponse response = converter.convert(jsonResponse);
+
+            if (skill != null) {
+                skill.setSkills(response.technicalSkills());
+                skill.setIsSkillDeleted(false);
+                skill.setUserEmail(userEmail);
+                skillRepository.save(skill);
+            } else {
+                Skill newSkill = Skill.builder()
+                        .skills(response.technicalSkills())
+                        .isSkillDeleted(false)
+                        .userEmail(userEmail)
+                        .build();
+                skillRepository.save(newSkill);
+            }
+
+            return response;
         } else {
             return SkillSummaryResponse.builder()
                     .technicalSkills(null)
@@ -66,8 +82,10 @@ public class AiServiceImpl implements AiService {
     public ProjectDescriptionResponse rewriteProjectDescriptionWithAi(Long projectId) {
 
         log.warn("Fetching Project.");
-        Project project = projectRepository.findById(projectId).orElseThrow(() ->
-                new ResourceNotFoundException("Project", projectId));
+        Project project = projectRepository.findByProjectIdAndUserEmail(
+                projectId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
         log.warn("Project fetched successfully.");
 
         if (project.getIsProjectDeleted()) {
@@ -84,12 +102,7 @@ public class AiServiceImpl implements AiService {
 
         String userMessage = userProjectDescription + "\n\n" + converter.getFormat();
 
-        String aiProjectDescriptionResponse = chatClient
-                .prompt()
-                .system(projectDescriptionSystemPrompt)
-                .user(userMessage)
-                .call()
-                .content();
+        String aiProjectDescriptionResponse = generateAIResponses(projectDescriptionSystemPrompt, userMessage);
 
         log.debug("Raw ai response: {}", aiProjectDescriptionResponse);
 
@@ -113,8 +126,10 @@ public class AiServiceImpl implements AiService {
     @Override
     public ExperienceDescriptionResponse rewriteExperienceDescriptionWithAi(Long experienceId) {
 
-        Experience experience = experienceRepository.findById(experienceId).orElseThrow(() ->
-                new ResourceNotFoundException("experience", experienceId));
+        Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
+                experienceId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
             throw new ResourceNotFoundException("experience", experienceId);
@@ -129,12 +144,7 @@ public class AiServiceImpl implements AiService {
 
         String userMessage = userExperienceDescription + "\n\n" + converter.getFormat();
 
-        String aiExperienceDescriptionResponse = chatClient
-                .prompt()
-                .system(experienceDescriptionSystemPrompt)
-                .user(userMessage)
-                .call()
-                .content();
+        String aiExperienceDescriptionResponse = generateAIResponses(experienceDescriptionSystemPrompt, userMessage);
 
         if (aiExperienceDescriptionResponse != null) {
             ExperienceDescriptionResponse experienceDescriptionResponse =
@@ -156,8 +166,10 @@ public class AiServiceImpl implements AiService {
     @Override
     public OtherDescriptionResponse rewriteOtherSectionDescriptionWithAi(Long otherId) {
 
-        Other other = otherRepository.findById(otherId).orElseThrow(() ->
-                new ResourceNotFoundException("other", otherId));
+        Other other = otherRepository.findByOtherIdAndUserEmail(
+                otherId,
+                loggedInUser.getCurrentLoggedInUser()
+        ).orElseThrow(() -> new ResourceNotFoundException("other", otherId));
 
         if (other.getIsDeleted()) {
             throw new ResourceNotFoundException("other", otherId);
@@ -172,12 +184,7 @@ public class AiServiceImpl implements AiService {
 
         String userMessage = concatenatedOtherDescription + "\n\n" + converter.getFormat();
 
-        String aiResponse = chatClient
-                .prompt()
-                .system(otherDescriptionSystemPrompt)
-                .user(userMessage)
-                .call()
-                .content();
+        String aiResponse = generateAIResponses(otherDescriptionSystemPrompt, userMessage);
 
         if (aiResponse != null) {
             OtherDescriptionResponse otherDescriptionResponse = converter.convert(aiResponse);
@@ -194,6 +201,7 @@ public class AiServiceImpl implements AiService {
                 .build();
     }
 
+    @Override
     public ProfileSummaryResponse rewriteProfileSummaryWithAi() throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -203,20 +211,60 @@ public class AiServiceImpl implements AiService {
             throw new Exception("No Profile Summary found. Please Proceed with Generate Profile Summary.");
         }
 
-        String userProfileSummary = profileSummary.getProfileSummary();
+        String userProfileSummary = profileSummary.getDescription();
 
-        String aiResponse = chatClient
-                .prompt()
-                .system(profileSummarySystemPrompt)
-                .user(userProfileSummary)
-                .call()
-                .content();
+        String aiResponse = generateAIResponses(profileSummarySystemPrompt, userProfileSummary);
 
-        profileSummary.setProfileSummary(aiResponse);
+        profileSummary.setDescription(aiResponse);
         profileSummary.setUserEmail(userEmail);
         profileSummary.setIsProfileSummaryDeleted(false);
 
-        return profileSummaryMapper.toProfileSummaryResponseFromProfileSummary(profileSummaryRepository.save(profileSummary));
+        return profileSummaryMapper.toProfileSummaryResponseFromProfileSummary(
+                profileSummaryRepository.save(profileSummary)
+        );
+    }
+
+    @Override
+    public ProfileSummaryResponse generateProfileSummaryWithAi() throws Exception {
+
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
+
+        ProfileSummary profileSummary = profileSummaryRepository.findExistingProfileSummary(userEmail);
+        if (profileSummary != null) {
+            throw new Exception("You already have a profile summary created. Please proceed with rewrite profile summary with AI.");
+        }
+
+        List<Experience> experienceList = experienceRepository.findActiveExperiences(userEmail);
+        List<Project> projectList = projectRepository.findActiveProjects(userEmail);
+        Skill skill = skillRepository.findActiveSkill(userEmail);
+
+        if (experienceList.isEmpty() && projectList.isEmpty() && skill == null) {
+            throw new Exception("Please add Experience, or Projects, or Skills first to generate the profile summary.");
+        }
+
+        String combinedString = "Experience: " + experienceList
+                + "Projects: " + projectList
+                + "Skills: " + skill;
+
+        String aiResponse = generateAIResponses(profileSummarySystemPrompt, combinedString);
+
+        ProfileSummary newProfileSummary = ProfileSummary.builder()
+                .description(aiResponse)
+                .userEmail(userEmail)
+                .isProfileSummaryDeleted(false)
+                .build();
+
+        return profileSummaryMapper.toProfileSummaryResponseFromProfileSummary(
+                profileSummaryRepository.save(newProfileSummary)
+        );
+    }
+
+    private String generateAIResponses(String systemPrompt, String userPrompt) {
+        return chatClient.prompt()
+                .system(systemPrompt)
+                .user(userPrompt)
+                .call()
+                .content();
     }
 
 }

@@ -12,7 +12,7 @@ public interface ProfileSummaryRepository extends JpaRepository<ProfileSummary, 
 
     @Query("""
             SELECT p FROM ProfileSummary p
-            WHERE p.userEmail = :userEmail AND p.isProfileDeleted = false
+            WHERE p.userEmail = :userEmail AND p.isProfileSummaryDeleted = false
             """)
     ProfileSummary findExistingProfileSummary(@Param("userEmail") String userEmail);
 
