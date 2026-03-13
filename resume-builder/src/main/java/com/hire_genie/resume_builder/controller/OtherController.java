@@ -24,27 +24,26 @@ public class OtherController {
 
     }
 
-    @GetMapping("/others/{otherId}")
-    public ResponseEntity<OtherResponse> getOtherById(@PathVariable Long otherId) {
+    @GetMapping("/others")
+    public ResponseEntity<OtherResponse> getOther() throws Exception {
 
-        return ResponseEntity.ok(otherService.getOtherById(otherId));
+        return ResponseEntity.ok(otherService.getOther());
 
     }
 
-    @PutMapping("/others/{otherId}")
-    public ResponseEntity<OtherResponse> updateOtherById(
-            @PathVariable Long otherId,
+    @PutMapping("/others")
+    public ResponseEntity<OtherResponse> updateOther(
             @RequestBody @Valid OtherRequest otherRequest
-    ) {
+    ) throws Exception {
 
-        return ResponseEntity.ok(otherService.updateOtherById(otherId, otherRequest));
+        return ResponseEntity.ok(otherService.updateOther(otherRequest));
 
     }
 
-    @DeleteMapping("/others/{otherId}")
-    public ResponseEntity<String> deleteOtherById (@PathVariable Long otherId) {
+    @DeleteMapping("/others")
+    public ResponseEntity<String> deleteOther () {
 
-        return ResponseEntity.ok(otherService.deleteOtherById(otherId));
+        return ResponseEntity.ok(otherService.deleteOther());
 
     }
 

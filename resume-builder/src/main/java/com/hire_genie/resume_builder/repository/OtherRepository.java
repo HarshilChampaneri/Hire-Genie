@@ -13,4 +13,10 @@ public interface OtherRepository extends JpaRepository<Other, Long> {
 
     Optional<Other> findByOtherIdAndUserEmail(Long otherId, String userEmail);
 
+    @Query("""
+            SELECT o FROM Other o
+            WHERE o.userEmail = :userEmail AND o.isDeleted = false
+            """)
+    Other findActiveOther(@Param("userEmail") String userEmail);
+
 }

@@ -6,9 +6,9 @@ import com.hire_genie.resume_builder.dto.other.response.OtherResponse;
 public interface OtherService {
     OtherResponse addOthers(OtherRequest otherRequest);
 
-    OtherResponse getOtherById(Long otherId);
+    OtherResponse getOther() throws Exception;
 
-    OtherResponse updateOtherById(Long otherId, OtherRequest otherRequest);
+    OtherResponse updateOther(OtherRequest otherRequest) throws Exception;
 
-    String deleteOtherById(Long otherId);
+    String deleteOther();
 }

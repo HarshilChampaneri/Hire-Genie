@@ -12,8 +12,7 @@ public record ProfileResponse(
         String profession,
         String email,
         String mobileNo,
-        Set<String> urls,
-        String profileSummary
+        Set<String> urls
 
 ) {
 }

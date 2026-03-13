@@ -2,7 +2,6 @@ package com.hire_genie.resume_builder.service.impl;
 
 import com.hire_genie.resume_builder.dto.other.request.OtherRequest;
 import com.hire_genie.resume_builder.dto.other.response.OtherResponse;
-import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
 import com.hire_genie.resume_builder.mapper.OtherMapper;
 import com.hire_genie.resume_builder.model.Other;
 import com.hire_genie.resume_builder.repository.OtherRepository;
@@ -11,6 +10,8 @@ import com.hire_genie.resume_builder.service.OtherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Slf4j
 @Service
@@ -24,23 +25,37 @@ public class OtherServiceImpl implements OtherService {
     @Override
     public OtherResponse addOthers(OtherRequest otherRequest) {
 
-        Other other = otherMapper.toOtherFromOtherRequest(otherRequest);
-        other.setIsDeleted(false);
-        other.setUserEmail(loggedInUser.getCurrentLoggedInUser());
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
 
-        return otherMapper.toOtherResponseFromOther(otherRepository.save(other));
+        Other existingOther = otherRepository.findActiveOther(userEmail);
+
+        if (existingOther != null) {
+
+            List<String> description = otherRequest.description();
+            for (String otherDescription : description) {
+                existingOther.getDescription().add(otherDescription);
+            }
+            existingOther.setIsDeleted(false);
+            existingOther.setUserEmail(loggedInUser.getCurrentLoggedInUser());
+
+            return otherMapper.toOtherResponseFromOther(otherRepository.save(existingOther));
+        }
+
+        Other newOther = otherMapper.toOtherFromOtherRequest(otherRequest);
+        newOther.setIsDeleted(false);
+        newOther.setUserEmail(userEmail);
+
+        return otherMapper.toOtherResponseFromOther(otherRepository.save(newOther));
     }
 
     @Override
-    public OtherResponse getOtherById(Long otherId) {
+    public OtherResponse getOther() throws Exception {
 
-        Other other = otherRepository.findByOtherIdAndUserEmail(
-                otherId,
-                loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("other", otherId));
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
 
-        if (other.getIsDeleted()) {
-            throw new ResourceNotFoundException("other", otherId);
+        Other other = otherRepository.findActiveOther(userEmail);
+        if (other == null) {
+            throw new Exception("No Other found.");
         }
 
         return otherMapper.toOtherResponseFromOther(otherRepository.save(other));
@@ -48,15 +63,13 @@ public class OtherServiceImpl implements OtherService {
     }
 
     @Override
-    public OtherResponse updateOtherById(Long otherId, OtherRequest otherRequest) {
+    public OtherResponse updateOther(OtherRequest otherRequest) throws Exception {
 
-        Other other = otherRepository.findByOtherIdAndUserEmail(
-                otherId,
-                loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("other", otherId));
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
 
-        if (other.getIsDeleted()) {
-            throw new ResourceNotFoundException("other", otherId);
+        Other other = otherRepository.findActiveOther(userEmail);
+        if (other == null) {
+            throw new Exception("No Other found.");
         }
 
         if (!otherRequest.description().isEmpty() && !otherRequest.description().equals(other.getDescription())) {
@@ -66,25 +79,22 @@ public class OtherServiceImpl implements OtherService {
         other.setUserEmail(loggedInUser.getCurrentLoggedInUser());
 
         return otherMapper.toOtherResponseFromOther(otherRepository.save(other));
-
     }
 
     @Override
-    public String deleteOtherById(Long otherId) {
+    public String deleteOther() {
 
-        Other other = otherRepository.findByOtherIdAndUserEmail(
-                otherId,
-                loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("other", otherId));
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
 
-        if (other.getIsDeleted()) {
-            return "Other with otherId: " + otherId + " is already deleted Before.";
+        Other other = otherRepository.findActiveOther(userEmail);
+        if (other == null) {
+            return "There is no Other associated with your account. Please create one before deleting.";
         }
 
         other.setIsDeleted(true);
         otherRepository.save(other);
 
-        return "Other with otherId : " + otherId + " deleted successfully.";
+        return "Other with otherId : " + other.getOtherId() + " deleted successfully.";
     }
 
 }
