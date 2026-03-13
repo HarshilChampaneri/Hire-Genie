@@ -10,6 +10,7 @@ import com.hire_genie.resume_builder.dto.profile.response.ProfileResponse;
 import com.hire_genie.resume_builder.dto.profileSummary.response.ProfileSummaryResponse;
 import com.hire_genie.resume_builder.dto.project.response.ProjectResponse;
 import com.hire_genie.resume_builder.dto.project.response.ProjectResponseList;
+import com.hire_genie.resume_builder.dto.resume.request.ResumeRequest;
 import com.hire_genie.resume_builder.dto.skill_summary.response.SkillSummaryResponse;
 
 import java.io.IOException;
@@ -53,4 +54,6 @@ public interface DynamicResumeGeneratorService {
 
     void startNewPage() throws IOException;
 
+    // Resume Content Adder:
+    ResumeRequest resumeContentAdder();
 }

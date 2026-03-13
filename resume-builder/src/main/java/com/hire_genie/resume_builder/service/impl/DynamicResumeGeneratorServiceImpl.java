@@ -1,5 +1,6 @@
 package com.hire_genie.resume_builder.service.impl;
 
+import com.hire_genie.resume_builder.dto.certificate.response.CertificateResponse;
 import com.hire_genie.resume_builder.dto.certificate.response.CertificateResponseList;
 import com.hire_genie.resume_builder.dto.education.response.EducationResponse;
 import com.hire_genie.resume_builder.dto.education.response.EducationResponseList;
@@ -12,7 +13,10 @@ import com.hire_genie.resume_builder.dto.project.response.ProjectResponse;
 import com.hire_genie.resume_builder.dto.project.response.ProjectResponseList;
 import com.hire_genie.resume_builder.dto.resume.request.ResumeRequest;
 import com.hire_genie.resume_builder.dto.skill_summary.response.SkillSummaryResponse;
-import com.hire_genie.resume_builder.model.ProfileSummary;
+import com.hire_genie.resume_builder.mapper.*;
+import com.hire_genie.resume_builder.model.*;
+import com.hire_genie.resume_builder.repository.*;
+import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.*;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -35,14 +39,23 @@ import java.util.Map;
 public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGeneratorService {
 
     // Dependencies
-    private final ProfileService profileService;
-    private final ProfileSummary profileSummary;
-    private final ExperienceService experienceService;
-    private final ProjectService projectService;
-    private final SkillService skillService;
-    private final EducationService educationService;
-    private final CertificateService certificateService;
-    private final OtherService otherService;
+    private final ProfileRepository profileRepository;
+    private final ProfileMapper profileMapper;
+    private final ProfileSummaryRepository profileSummaryRepository;
+    private final ProfileSummaryMapper profileSummaryMapper;
+    private final ExperienceRepository experienceRepository;
+    private final ExperienceMapper experienceMapper;
+    private final ProjectRepository projectRepository;
+    private final ProjectMapper projectMapper;
+    private final SkillRepository skillRepository;
+    private final SkillMapper skillMapper;
+    private final EducationRepository educationRepository;
+    private final EducationMapper educationMapper;
+    private final CertificateRepository certificateRepository;
+    private final CertificateMapper certificateMapper;
+    private final OtherRepository otherRepository;
+    private final OtherMapper otherMapper;
+    private final LoggedInUser loggedInUser;
 
     // Configuration Constants
     private static final float MARGIN = 50;
@@ -292,9 +305,121 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
     }
 
     // Resume Content Adder:
-
+    @Override
     public ResumeRequest resumeContentAdder() {
-        return ResumeRequest.builder().build();
+
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
+
+        // Profile:-
+        Profile profile = profileRepository.findExistingProfile(userEmail);
+
+        // Profile Summary
+        ProfileSummary profileSummary = profileSummaryRepository.findExistingProfileSummary(userEmail);
+
+        // Experience
+        List<Experience> experiences = experienceRepository.findActiveExperiences(userEmail);
+
+        // Project
+        List<Project> projects = projectRepository.findActiveProjects(userEmail);
+
+        // Skill
+        Skill skill = skillRepository.findActiveSkill(userEmail);
+
+        // Education
+        List<Education> educations = educationRepository.findActiveEducations(userEmail);
+
+        // Certificate
+        List<Certificate> certificates = certificateRepository.findActiveCertificates(userEmail);
+
+        // Other
+        Other other = otherRepository.findActiveOther(userEmail);
+
+        return ResumeRequest.builder()
+                .profile(fetchProfileResponse(profile))
+                .summary(fetchProfileSummaryResponse(profileSummary))
+                .experiences(fetchExperienceResponseList(experiences))
+                .projects(fetchProjectResponseList(projects))
+                .skills(fetchSkillSummaryResponse(skill))
+                .educations(fetchEducationResponseList(educations))
+                .certificates(fetchCertificateResponseList(certificates))
+                .others(fetchOtherResponse(other))
+                .build();
+    }
+
+    private ProfileResponse fetchProfileResponse(Profile profile) {
+        return profile != null ? profileMapper.toProfileResponseFromProfile(profile) : null;
+    }
+
+    private ProfileSummaryResponse fetchProfileSummaryResponse(ProfileSummary profileSummary) {
+        return profileSummary != null ? profileSummaryMapper.toProfileSummaryResponseFromProfileSummary(profileSummary) : null;
+    }
+
+    private ExperienceResponseList fetchExperienceResponseList(List<Experience> experiences) {
+
+        if (experiences.isEmpty()) {
+            return null;
+        }
+
+        List<ExperienceResponse> experienceResponseList = experiences.stream()
+                .map(experienceMapper::toExperienceResponseFromExperience)
+                .toList();
+
+        return ExperienceResponseList.builder()
+                .experiences(experienceResponseList)
+                .build();
+    }
+
+    private ProjectResponseList fetchProjectResponseList(List<Project> projects) {
+
+        if (projects.isEmpty()) {
+            return null;
+        }
+
+        List<ProjectResponse> projectResponseList = projects.stream()
+                .map(projectMapper::toProjectResponseFromProject)
+                .toList();
+
+        return ProjectResponseList.builder()
+                .projects(projectResponseList)
+                .build();
+    }
+
+    private SkillSummaryResponse fetchSkillSummaryResponse(Skill skill) {
+        return skill != null ? skillMapper.toSkillResponseFromSkill(skill) : null;
+    }
+
+    private EducationResponseList fetchEducationResponseList(List<Education> educations) {
+
+        if (educations.isEmpty()) {
+            return null;
+        }
+
+        List<EducationResponse> educationResponseList = educations.stream()
+                .map(educationMapper::toEducationResponseFromEducation)
+                .toList();
+
+        return EducationResponseList.builder()
+                .educations(educationResponseList)
+                .build();
+    }
+
+    private CertificateResponseList fetchCertificateResponseList(List<Certificate> certificates) {
+
+        if (certificates.isEmpty()) {
+            return null;
+        }
+
+        List<CertificateResponse> certificateResponseList = certificates.stream()
+                .map(certificateMapper::toCertificateResponseFromCertificate)
+                .toList();
+
+        return CertificateResponseList.builder()
+                .certificates(certificateResponseList)
+                .build();
+    }
+
+    private OtherResponse fetchOtherResponse(Other other) {
+        return other != null ? otherMapper.toOtherResponseFromOther(other) : null;
     }
 
 }

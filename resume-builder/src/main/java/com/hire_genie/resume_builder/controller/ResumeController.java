@@ -8,7 +8,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,8 +22,10 @@ public class ResumeController {
 
     private final DynamicResumeGeneratorService generator;
 
-    @PostMapping("/generate")
-    public ResponseEntity<byte[]> generateResume(@RequestBody ResumeRequest resumeRequest) {
+    @PostMapping("/generate-pdf")
+    public ResponseEntity<byte[]> generateResume() {
+
+        ResumeRequest resumeRequest = generator.resumeContentAdder();
 
         try(ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
