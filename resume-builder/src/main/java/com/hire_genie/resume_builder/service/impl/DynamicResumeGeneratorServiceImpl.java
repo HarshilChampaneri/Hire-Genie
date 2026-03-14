@@ -23,6 +23,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.springframework.stereotype.Service;
@@ -57,21 +58,32 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
     private final OtherMapper otherMapper;
     private final LoggedInUser loggedInUser;
 
-    // Configuration Constants
-    private static final float MARGIN = 50;
-    private static final float PAGE_WIDTH = PDRectangle.A4.getWidth();
-    private static final float PAGE_HEIGHT = PDRectangle.A4.getHeight();
-    private static final float FONT_SIZE_TITLE = 16;
-    private static final float FONT_SIZE_SUBTITLE = 12;
-    private static final float FONT_SIZE_BODY = 10;
-    private static final float LINE_SPACING = 15;
+    // ─── Configuration Constants ──────────────────────────────────────────────────
+    private static final float MARGIN          = 50f;
+    private static final float PAGE_WIDTH      = PDRectangle.A4.getWidth();
+    private static final float PAGE_HEIGHT     = PDRectangle.A4.getHeight();
+    private static final float FONT_NAME       = 20f;   // Candidate name
+    private static final float FONT_PROFESSION = 14f;   // Italic profession
+    private static final float FONT_SECTION    = 11f;   // Section headers
+    private static final float FONT_BODY       = 10f;   // Everything else
+    private static final float LINE_SPACING    = 14f;
 
     private PDDocument document;
     private PDPage currentPage;
     private PDPageContentStream contentStream;
     private float yPosition;
-    private final DateTimeFormatter monthYearFormatter = DateTimeFormatter.ofPattern("MM/yyyy");
+    private final DateTimeFormatter monthYearFormatter =
+            DateTimeFormatter.ofPattern("MM/yyyy");
 
+    // ─── Font Helpers ─────────────────────────────────────────────────────────────
+    private PDFont fontRegular()    { return new PDType1Font(Standard14Fonts.FontName.HELVETICA); }
+    private PDFont fontBold()       { return new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD); }
+    private PDFont fontItalic()     { return new PDType1Font(Standard14Fonts.FontName.HELVETICA_OBLIQUE); }
+
+    // ─── Alignment Enum ───────────────────────────────────────────────────────────
+    private enum Align { LEFT, CENTER, RIGHT }
+
+    // ─── Main Entry Point ─────────────────────────────────────────────────────────
     @Override
     public void generateResumeToStream(OutputStream outputStream,
                                        ProfileResponse profile,
@@ -82,63 +94,62 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
                                        EducationResponseList educations,
                                        CertificateResponseList certificates,
                                        OtherResponse others) throws IOException {
-
         document = new PDDocument();
         startNewPage();
 
-        // 1. Profile Section
+        // 1. Profile
         if (profile != null) renderProfile(profile);
 
-        // 2. Summary Section
+        // 2. Summary
         if (summary != null && summary.profileSummary() != null) {
             renderSectionHeader("PROFILE SUMMARY");
             renderParagraph(summary.profileSummary());
         }
 
-        // 3. Experience Section
-        if (experiences != null && experiences.experiences() != null && !experiences.experiences().isEmpty()) {
+        // 3. Experience
+        if (experiences != null && experiences.experiences() != null
+                && !experiences.experiences().isEmpty()) {
             renderSectionHeader("EXPERIENCE");
-            for (ExperienceResponse exp : experiences.experiences()) {
-                renderExperience(exp);
-            }
+            for (ExperienceResponse exp : experiences.experiences()) renderExperience(exp);
         }
 
-        // 4. Projects Section
-        if (projects != null && projects.projects() != null && !projects.projects().isEmpty()) {
+        // 4. Projects
+        if (projects != null && projects.projects() != null
+                && !projects.projects().isEmpty()) {
             renderSectionHeader("PROJECTS");
-            for (ProjectResponse project : projects.projects()) {
-                renderProject(project);
-            }
+            for (ProjectResponse project : projects.projects()) renderProject(project);
         }
 
-        // 5. Skills Section
-        if (skills != null && skills.technicalSkills() != null && !skills.technicalSkills().isEmpty()) {
+        // 5. Skills
+        if (skills != null && skills.technicalSkills() != null
+                && !skills.technicalSkills().isEmpty()) {
             renderSectionHeader("TECHNICAL SKILLS");
             renderSkills(skills.technicalSkills());
         }
 
-        // 6. Education Section
-        if (educations != null && educations.educations() != null && !educations.educations().isEmpty()) {
+        // 6. Education
+        if (educations != null && educations.educations() != null
+                && !educations.educations().isEmpty()) {
             renderSectionHeader("EDUCATION");
-            for (EducationResponse edu : educations.educations()) {
-                renderEducation(edu);
-            }
+            for (EducationResponse edu : educations.educations()) renderEducation(edu);
         }
 
-        // 7. Certificates Section
-        if (certificates != null && certificates.certificates() != null && !certificates.certificates().isEmpty()) {
+        // 7. Certificates
+        if (certificates != null && certificates.certificates() != null
+                && !certificates.certificates().isEmpty()) {
             renderSectionHeader("CERTIFICATES");
             for (var cert : certificates.certificates()) {
-                renderBulletPoint(cert.certificateTitle() + (cert.certificateUrl() != null ? " - " + cert.certificateUrl() : ""));
+                String line = cert.certificateTitle()
+                        + (cert.certificateUrl() != null ? " — " + cert.certificateUrl() : "");
+                renderBulletPoint(line);
             }
         }
 
-        // 8. Others Section
-        if (others != null && others.description() != null && !others.description().isEmpty()) {
+        // 8. Others
+        if (others != null && others.description() != null
+                && !others.description().isEmpty()) {
             renderSectionHeader("OTHERS");
-            for (String desc : others.description()) {
-                renderBulletPoint(desc);
-            }
+            for (String desc : others.description()) renderBulletPoint(desc);
         }
 
         contentStream.close();
@@ -146,147 +157,320 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
         document.close();
     }
 
-    // --- RENDER HELPERS ---
+// ─── Section Renderers ────────────────────────────────────────────────────────
 
+    /**
+     * Header block:
+     *   HARSHIL CHAMPANERI         ← bold, 20pt, centred
+     *   Java Backend Developer     ← italic, 14pt, centred
+     *   email | phone              ← regular, 10pt, centred
+     *   links                      ← regular, 10pt, centred
+     */
     @Override
     public void renderProfile(ProfileResponse p) throws IOException {
-        writeText(p.fullName(), FONT_SIZE_TITLE, true, true);
-        writeText(p.profession(), FONT_SIZE_SUBTITLE, false, true);
-
-        String contactInfo = p.email() + " | " + p.mobileNo();
-        writeText(contactInfo, FONT_SIZE_BODY, false, true);
-
-        if (p.urls() != null) {
-            writeText(String.join(" | ", p.urls()), FONT_SIZE_BODY, false, true);
+        writeLine(p.fullName(), fontBold(), FONT_NAME, Align.CENTER);
+        writeLine(p.profession(), fontItalic(), FONT_PROFESSION, Align.CENTER);
+        writeLine(p.email() + " | " + p.mobileNo(), fontRegular(), FONT_BODY, Align.CENTER);
+        if (p.urls() != null && !p.urls().isEmpty()) {
+            writeLine(String.join(" | ", p.urls()), fontRegular(), FONT_BODY, Align.CENTER);
         }
-        yPosition -= 10;
+        yPosition -= 6f;
     }
 
+    /**
+     * Experience block:
+     *   Position (bold, left)          08/2025 – 09/2025 (regular, right)
+     *   Company Name (italic, left)
+     *   • bullet …
+     */
     @Override
     public void renderExperience(ExperienceResponse exp) throws IOException {
-        checkAndNewPage(40);
-        String dateRange = exp.startDate().format(monthYearFormatter) + " - " +
-                (exp.isWorkingInCompany() ? "Present" : exp.endDate().format(monthYearFormatter));
+        checkAndNewPage(50f);
+        String dateRange = exp.startDate().format(monthYearFormatter) + " \u2013 "
+                + (exp.isWorkingInCompany() ? "Present" : exp.endDate().format(monthYearFormatter));
 
-        writeText(exp.companyName() + " (" + dateRange + ")", FONT_SIZE_SUBTITLE, true, false);
-        writeText(exp.position(), FONT_SIZE_BODY, false, true);
+        writeTwoColumnLine(exp.position(),    fontBold(),    FONT_BODY,
+                dateRange,         fontRegular(), FONT_BODY);
+        writeLine(exp.companyName(), fontItalic(), FONT_BODY, Align.LEFT);
 
         if (exp.description() != null) {
-            for (String bullet : exp.description()) {
-                renderBulletPoint(bullet);
-            }
+            for (String bullet : exp.description()) renderBulletPoint(bullet);
         }
-        yPosition -= 5;
+        yPosition -= 5f;
     }
 
+    /**
+     * Project block:
+     *   Project Name (bold, left)         GitHub Link (regular, right)
+     *   Tech Stack (italic, left)         11/2025 – Present (regular, right)
+     *   • bullet …
+     */
     @Override
     public void renderProject(ProjectResponse prj) throws IOException {
-        checkAndNewPage(40);
-        String dateRange = prj.projectStartDate().format(monthYearFormatter) + " - " +
-                (prj.isProjectInProgress() ? "Present" : prj.projectEndDate().format(monthYearFormatter));
+        checkAndNewPage(50f);
+        String dateRange = prj.projectStartDate().format(monthYearFormatter) + " \u2013 "
+                + (prj.isProjectInProgress() ? "Present" : prj.projectEndDate().format(monthYearFormatter));
 
-        writeText(prj.projectName() + " | " + dateRange, FONT_SIZE_SUBTITLE, true, false);
-        if (prj.projectTechStacks() != null) {
-            writeText("Tech Stack: " + String.join(", ", prj.projectTechStacks()), FONT_SIZE_BODY, false, true);
-        }
+        writeTwoColumnLine(prj.projectName(), fontBold(),    FONT_BODY,
+                "GitHub Link",    fontRegular(), FONT_BODY);
 
-        for (String bullet : prj.projectDescription()) {
-            renderBulletPoint(bullet);
-        }
-        yPosition -= 5;
+        String techStack = (prj.projectTechStacks() != null && !prj.projectTechStacks().isEmpty())
+                ? String.join(", ", prj.projectTechStacks())
+                : "";
+        writeTwoColumnLine(techStack, fontItalic(), FONT_BODY,
+                dateRange, fontRegular(), FONT_BODY);
+
+        for (String bullet : prj.projectDescription()) renderBulletPoint(bullet);
+        yPosition -= 5f;
     }
 
+    /**
+     * Skills block (one line per category):
+     *   Backend & Core:  (bold) Java, Spring Boot, … (italic)
+     */
     @Override
     public void renderSkills(Map<String, List<String>> skills) throws IOException {
         for (var entry : skills.entrySet()) {
-            String skillLine = entry.getKey() + ": " + String.join(", ", entry.getValue());
-            renderParagraph(skillLine);
+            String category   = entry.getKey() + ": ";
+            String skillsList = String.join(", ", entry.getValue());
+            writeMixedLine(category, fontBold(), skillsList, fontItalic(), FONT_BODY);
         }
     }
 
+    /**
+     * Education block:
+     *   Gujarat Technological University (bold, left)    Gujarat, India (regular, right)
+     *   Computer Engineering, B.E.       (italic, left)  07/2023 – 07/2027 (regular, right)
+     *   CGPA                             (italic, left)  8.61 (regular, right)
+     */
     @Override
     public void renderEducation(EducationResponse edu) throws IOException {
-        checkAndNewPage(30);
-        writeText(edu.educationTitle() + " - " + edu.fieldOfStudy(), FONT_SIZE_SUBTITLE, true, false);
-        writeText(edu.location() + " | " + edu.gradeTitle() + ": " + edu.grades(), FONT_SIZE_BODY, false, true);
-        yPosition -= 5;
+        checkAndNewPage(50f);
+        writeTwoColumnLine(edu.educationTitle(), fontBold(),    FONT_BODY,
+                edu.location(),       fontRegular(), FONT_BODY);
+        writeTwoColumnLine(edu.fieldOfStudy(),   fontItalic(),  FONT_BODY,
+                "",                  fontRegular(), FONT_BODY);
+        writeTwoColumnLine(edu.gradeTitle(),     fontItalic(),  FONT_BODY,
+                String.valueOf(edu.grades()),         fontRegular(), FONT_BODY);
+        yPosition -= 5f;
     }
 
-    // --- LAYOUT ENGINE ENGINE ---
-
+    /**
+     * Section header with full-width underline:
+     *   EXPERIENCE
+     *   ──────────────────────────────────────────────────
+     */
     @Override
     public void renderSectionHeader(String title) throws IOException {
-        checkAndNewPage(30);
-        yPosition -= 10;
-        writeText(title, FONT_SIZE_SUBTITLE, true, false);
-        // Draw underline
-        contentStream.setLineWidth(1f);
-        contentStream.moveTo(MARGIN, yPosition + 2);
-        contentStream.lineTo(PAGE_WIDTH - MARGIN, yPosition + 2);
+        checkAndNewPage(30f);
+        yPosition -= 8f;                                          // breathing space above header
+        writeLine(title, fontBold(), FONT_SECTION, Align.LEFT);   // yPosition moves down by LINE_SPACING here
+        contentStream.setLineWidth(0.8f);
+        contentStream.moveTo(MARGIN, yPosition + LINE_SPACING - 2f);       // ← fixed: relative to text baseline
+        contentStream.lineTo(PAGE_WIDTH - MARGIN, yPosition + LINE_SPACING - 2f);
         contentStream.stroke();
-        yPosition -= 5;
+        yPosition -= 6f;                                          // gap between line and first content item
     }
 
+    /** Bullet point with text wrapping and continuation indent. */
     @Override
     public void renderBulletPoint(String text) throws IOException {
-        checkAndNewPage(15);
-        float bulletMargin = MARGIN + 10;
-        List<String> lines = wrapText(text, FONT_SIZE_BODY, PAGE_WIDTH - bulletMargin - MARGIN);
+        if (text == null || text.isEmpty()) return;
+        float bulletIndent = MARGIN + 10f;
+        float wrapWidth    = PAGE_WIDTH - bulletIndent - MARGIN - 8f;
+        List<String> lines = wrapTextWithFont(text, fontRegular(), FONT_BODY, wrapWidth);
 
         for (int i = 0; i < lines.size(); i++) {
-            checkAndNewPage(15);
+            checkAndNewPage(LINE_SPACING);
             contentStream.beginText();
-            contentStream.setFont(new PDType1Font(Standard14Fonts.FontName.HELVETICA), FONT_SIZE_BODY);
-            contentStream.newLineAtOffset(bulletMargin, yPosition);
-            contentStream.showText((i == 0 ? "• " : "  ") + lines.get(i));
+            contentStream.setFont(fontRegular(), FONT_BODY);
+            contentStream.newLineAtOffset(bulletIndent, yPosition);
+            contentStream.showText((i == 0 ? "\u2022 " : "  ") + lines.get(i));
             contentStream.endText();
             yPosition -= LINE_SPACING;
         }
     }
 
+    /** Wrapped paragraph, left-aligned. */
     @Override
     public void renderParagraph(String text) throws IOException {
-        List<String> lines = wrapText(text, FONT_SIZE_BODY, PAGE_WIDTH - (2 * MARGIN));
+        if (text == null) return;
+        List<String> lines = wrapTextWithFont(text, fontRegular(), FONT_BODY,
+                PAGE_WIDTH - 2f * MARGIN);
         for (String line : lines) {
-            checkAndNewPage(15);
-            writeText(line, FONT_SIZE_BODY, false, true);
+            checkAndNewPage(LINE_SPACING);
+            writeLine(line, fontRegular(), FONT_BODY, Align.LEFT);
         }
     }
 
+// ─── Legacy Interface Methods (kept for interface compatibility) ───────────────
+
+    /** Delegates to writeLine – kept for interface compatibility. */
     @Override
     public void writeText(String text, float size, boolean isBold, boolean center) throws IOException {
-        if (text == null) return;
-        checkAndNewPage(15);
-        contentStream.beginText();
-        var font = isBold ? new PDType1Font(Standard14Fonts.FontName.HELVETICA_BOLD) : new PDType1Font(Standard14Fonts.FontName.HELVETICA);
-        contentStream.setFont(font, size);
-
-        float textWidth = font.getStringWidth(text) / 1000 * size;
-        float x = center ? (PAGE_WIDTH - textWidth) / 2 : MARGIN;
-
-        contentStream.newLineAtOffset(x, yPosition);
-        contentStream.showText(text);
-        contentStream.endText();
-        yPosition -= LINE_SPACING;
+        writeLine(text, isBold ? fontBold() : fontRegular(), size,
+                center ? Align.CENTER : Align.LEFT);
     }
 
+    /** Delegates to wrapTextWithFont – kept for interface compatibility. */
     @Override
     public List<String> wrapText(String text, float fontSize, float width) throws IOException {
+        return wrapTextWithFont(text, fontRegular(), fontSize, width);
+    }
+
+// ─── Layout Primitives ────────────────────────────────────────────────────────
+
+    /**
+     * Write a single (possibly wrapped) text block with chosen font and alignment.
+     */
+    private void writeLine(String text, PDFont font, float size, Align align) throws IOException {
+        if (text == null || text.isEmpty()) return;
+        List<String> lines = wrapTextWithFont(text, font, size, PAGE_WIDTH - 2f * MARGIN);
+        for (String line : lines) {
+            checkAndNewPage(LINE_SPACING);
+            float textWidth = font.getStringWidth(line) / 1000f * size;
+            float x = switch (align) {
+                case CENTER -> (PAGE_WIDTH - textWidth) / 2f;
+                case RIGHT  -> PAGE_WIDTH - MARGIN - textWidth;
+                default     -> MARGIN;
+            };
+            contentStream.beginText();
+            contentStream.setFont(font, size);
+            contentStream.newLineAtOffset(x, yPosition);
+            contentStream.showText(line);
+            contentStream.endText();
+            yPosition -= LINE_SPACING;
+        }
+    }
+
+    /**
+     * Two-column line: leftText anchored to MARGIN, rightText anchored to right margin.
+     * If leftText wraps, subsequent lines are printed left-only (right text on first line only).
+     *
+     * Example:
+     *   Java Full Stack Developer – Remote Internship       08/2025 – 09/2025
+     */
+    private void writeTwoColumnLine(String leftText,  PDFont leftFont,  float leftSize,
+                                    String rightText, PDFont rightFont, float rightSize)
+            throws IOException {
+        if (leftText  == null) leftText  = "";
+        if (rightText == null) rightText = "";
+
+        float rightWidth = rightFont.getStringWidth(rightText) / 1000f * rightSize;
+        float rightX     = PAGE_WIDTH - MARGIN - rightWidth;
+        // Left column must not overlap the right column (8pt gap)
+        float leftMaxWidth = rightX - MARGIN - 8f;
+
+        List<String> leftLines = wrapTextWithFont(leftText, leftFont, leftSize, leftMaxWidth);
+
+        // ── First line: left + right ──────────────────────────────────────────────
+        checkAndNewPage(LINE_SPACING);
+        if (!leftLines.get(0).isEmpty()) {
+            contentStream.beginText();
+            contentStream.setFont(leftFont, leftSize);
+            contentStream.newLineAtOffset(MARGIN, yPosition);
+            contentStream.showText(leftLines.get(0));
+            contentStream.endText();
+        }
+        if (!rightText.isEmpty()) {
+            contentStream.beginText();
+            contentStream.setFont(rightFont, rightSize);
+            contentStream.newLineAtOffset(rightX, yPosition);
+            contentStream.showText(rightText);
+            contentStream.endText();
+        }
+        yPosition -= LINE_SPACING;
+
+        // ── Overflow left lines (no right text) ──────────────────────────────────
+        for (int i = 1; i < leftLines.size(); i++) {
+            checkAndNewPage(LINE_SPACING);
+            contentStream.beginText();
+            contentStream.setFont(leftFont, leftSize);
+            contentStream.newLineAtOffset(MARGIN, yPosition);
+            contentStream.showText(leftLines.get(i));
+            contentStream.endText();
+            yPosition -= LINE_SPACING;
+        }
+    }
+
+    /**
+     * Mixed-font line: boldText immediately followed by regularText on the same baseline.
+     * Overflow of the regular text wraps to the next line, indented to where it started.
+     *
+     * Example:
+     *   Backend & Core:  Java, Spring Boot, Spring Cloud, Spring AI, …
+     */
+    private void writeMixedLine(String boldText, PDFont boldFont,
+                                String regularText, PDFont regularFont,
+                                float size) throws IOException {
+        if (boldText    == null) boldText    = "";
+        if (regularText == null) regularText = "";
+
+        checkAndNewPage(LINE_SPACING);
+
+        float boldWidth      = boldFont.getStringWidth(boldText) / 1000f * size;
+        float regularStartX  = MARGIN + boldWidth;
+        float regularMaxWidth = PAGE_WIDTH - regularStartX - MARGIN;
+
+        List<String> regularLines = wrapTextWithFont(regularText, regularFont, size, regularMaxWidth);
+
+        // ── Bold part ─────────────────────────────────────────────────────────────
+        contentStream.beginText();
+        contentStream.setFont(boldFont, size);
+        contentStream.newLineAtOffset(MARGIN, yPosition);
+        contentStream.showText(boldText);
+        contentStream.endText();
+
+        // ── First regular part (same line as bold) ────────────────────────────────
+        if (!regularLines.isEmpty() && !regularLines.get(0).isEmpty()) {
+            contentStream.beginText();
+            contentStream.setFont(regularFont, size);
+            contentStream.newLineAtOffset(regularStartX, yPosition);
+            contentStream.showText(regularLines.get(0));
+            contentStream.endText();
+        }
+        yPosition -= LINE_SPACING;
+
+        // ── Overflow regular lines ────────────────────────────────────────────────
+        for (int i = 1; i < regularLines.size(); i++) {
+            checkAndNewPage(LINE_SPACING);
+            contentStream.beginText();
+            contentStream.setFont(regularFont, size);
+            contentStream.newLineAtOffset(regularStartX, yPosition);
+            contentStream.showText(regularLines.get(i));
+            contentStream.endText();
+            yPosition -= LINE_SPACING;
+        }
+    }
+
+    /**
+     * Font-aware word-wrap. Returns at least one element (empty string when text is blank).
+     */
+    private List<String> wrapTextWithFont(String text, PDFont font, float fontSize,
+                                          float maxWidth) throws IOException {
         List<String> result = new ArrayList<>();
-        String[] words = text.split(" ");
+        if (text == null || text.isEmpty()) {
+            result.add("");
+            return result;
+        }
+        String[] words = text.split(" ", -1);
         StringBuilder line = new StringBuilder();
-        var font = new PDType1Font(Standard14Fonts.FontName.HELVETICA);
 
         for (String word : words) {
-            if (font.getStringWidth(line + word) / 1000 * fontSize > width) {
-                result.add(line.toString().trim());
-                line = new StringBuilder();
+            String candidate = line.isEmpty() ? word : line + " " + word;
+            if (font.getStringWidth(candidate) / 1000f * fontSize > maxWidth && !line.isEmpty()) {
+                result.add(line.toString());
+                line = new StringBuilder(word);
+            } else {
+                line = new StringBuilder(candidate);
             }
-            line.append(word).append(" ");
         }
-        result.add(line.toString().trim());
+        if (!line.toString().trim().isEmpty()) result.add(line.toString().trim());
+        if (result.isEmpty()) result.add("");
         return result;
     }
+
+// ─── Page Management ──────────────────────────────────────────────────────────
 
     @Override
     public void checkAndNewPage(float requiredHeight) throws IOException {
@@ -298,10 +482,10 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
 
     @Override
     public void startNewPage() throws IOException {
-        currentPage = new PDPage(PDRectangle.A4);
+        currentPage   = new PDPage(PDRectangle.A4);
         document.addPage(currentPage);
         contentStream = new PDPageContentStream(document, currentPage);
-        yPosition = PAGE_HEIGHT - MARGIN;
+        yPosition     = PAGE_HEIGHT - MARGIN;
     }
 
     // Resume Content Adder:
