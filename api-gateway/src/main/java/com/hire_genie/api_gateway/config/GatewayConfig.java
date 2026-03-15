@@ -38,6 +38,11 @@ public class GatewayConfig {
                         .route(path("/api/resumes/**"), http())
                         .filter(lb("RESUME-BUILDER"))
                         .before(this::addSecurityHeaders)
+                        .build())
+                .and(route("job-service")
+                        .route(path("/api/jobs/**"), http())
+                        .filter(lb("JOB-SERVICE"))
+                        .before(this::addSecurityHeaders)
                         .build());
     }
 
