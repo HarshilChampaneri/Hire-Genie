@@ -6,6 +6,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Set;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,13 @@ public class SecurityServiceImpl implements SecurityService {
     public String getCurrentLoggedInUser() {
 
         return loggedInUser.getCurrentLoggedInUser();
+
+    }
+
+    @Override
+    public Set<String> getAuthorities() {
+
+        return loggedInUser.getAuthorities();
 
     }
 

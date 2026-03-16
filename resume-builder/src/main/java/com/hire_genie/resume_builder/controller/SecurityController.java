@@ -8,6 +8,9 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+import java.util.Set;
+
 @RestController
 @RequestMapping("/api/resumes")
 @RequiredArgsConstructor
@@ -19,6 +22,13 @@ public class SecurityController {
     public ResponseEntity<String> getCurrentLoggedInUser() {
 
         return ResponseEntity.ok(securityService.getCurrentLoggedInUser());
+
+    }
+
+    @GetMapping("/user-roles")
+    public ResponseEntity<Set<String>> getAuthorities() {
+
+        return ResponseEntity.ok(securityService.getAuthorities());
 
     }
 

@@ -3,8 +3,11 @@ package com.hire_genie.job_service.exception.handler;
 import com.hire_genie.job_service.dto.error.response.ErrorResponse;
 //import com.hire_genie.job_service.exception.EndDateRequiredException;
 //import com.hire_genie.job_service.exception.InvalidDateRangeException;
+import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.boot.autoconfigure.graphql.GraphQlProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -48,6 +51,15 @@ public class GlobalExceptionHandler {
             HttpServletRequest request
     ) {
         return ErrorResponse.of(HttpStatus.NOT_FOUND, e.getMessage(), request.getRequestURI());
+    }
+
+    @ExceptionHandler(InvalidAccessException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleInvalidAccessException (
+            InvalidAccessException e,
+            HttpServletRequest request
+    ) {
+        return ErrorResponse.of(HttpStatus.UNAUTHORIZED, e.getMessage(), request.getRequestURI());
     }
 
 }
