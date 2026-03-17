@@ -6,6 +6,7 @@ import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
 import com.hire_genie.job_service.mapper.CompanyMapper;
 import com.hire_genie.job_service.model.Company;
+import com.hire_genie.job_service.model.Job;
 import com.hire_genie.job_service.repository.CompanyRepository;
 import com.hire_genie.job_service.security.util.LoggedInUser;
 import com.hire_genie.job_service.service.CompanyService;
@@ -103,6 +104,9 @@ public class CompanyServiceImpl implements CompanyService {
         }
 
         company.setIsCompanyDeleted(true);
+        for (Job job : company.getJobs()) {
+            job.setIsJobDeleted(true);
+        }
 
         companyRepository.save(company);
 
