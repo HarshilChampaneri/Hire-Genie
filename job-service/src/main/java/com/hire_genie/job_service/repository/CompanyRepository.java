@@ -27,4 +27,11 @@ public interface CompanyRepository extends JpaRepository<Company, Long> {
             @Param("companyId") Long companyId,
             @Param("userEmail") String userEmail
     );
+
+    @Query("""
+            SELECT c FROM Company c
+            WHERE c.isCompanyDeleted = false AND c.companyId = :companyId
+            """)
+    Company findByCompanyId(@Param("companyId") Long companyId);
+
 }

@@ -17,6 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -36,6 +38,7 @@ public class CompanyServiceImpl implements CompanyService {
         String userEmail = loggedInUser.getCurrentLoggedInUser();
 
         Company company = companyMapper.toCompanyFromCompanyRequest(companyRequest);
+        company.setJobs(new ArrayList<>());
         company.setIsCompanyDeleted(false);
         company.setUserEmail(userEmail);
 

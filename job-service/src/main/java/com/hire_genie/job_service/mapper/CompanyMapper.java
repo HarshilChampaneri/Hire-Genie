@@ -5,8 +5,6 @@ import com.hire_genie.job_service.dto.company.response.CompanyResponse;
 import com.hire_genie.job_service.model.Company;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-
 @Component
 public class CompanyMapper {
 
@@ -15,7 +13,6 @@ public class CompanyMapper {
         return Company.builder()
                 .companyUrl(companyRequest.companyUrl())
                 .companyName(companyRequest.companyName())
-                .jobs(new ArrayList<>())
                 .build();
 
     }
