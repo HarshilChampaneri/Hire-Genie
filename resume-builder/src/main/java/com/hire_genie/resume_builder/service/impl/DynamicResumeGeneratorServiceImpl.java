@@ -26,6 +26,8 @@ import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.font.PDFont;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
+import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -139,9 +141,7 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
                 && !certificates.certificates().isEmpty()) {
             renderSectionHeader("CERTIFICATES");
             for (var cert : certificates.certificates()) {
-                String line = cert.certificateTitle()
-                        + (cert.certificateUrl() != null ? " — " + cert.certificateUrl() : "");
-                renderBulletPoint(line);
+                renderLinkedBulletPoint(cert.certificateTitle(), cert.certificateUrl());
             }
         }
 
@@ -171,8 +171,46 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
         writeLine(p.fullName(), fontBold(), FONT_NAME, Align.CENTER);
         writeLine(p.profession(), fontItalic(), FONT_PROFESSION, Align.CENTER);
         writeLine(p.email() + " | " + p.mobileNo(), fontRegular(), FONT_BODY, Align.CENTER);
+
         if (p.urls() != null && !p.urls().isEmpty()) {
-            writeLine(String.join(" | ", p.urls()), fontRegular(), FONT_BODY, Align.CENTER);
+
+            List<String> urlList = new ArrayList<>(p.urls());
+
+            String separator = " | ";
+            PDFont font      = fontRegular();
+            float  sepWidth  = font.getStringWidth(separator) / 1000f * FONT_BODY;
+
+            // Calculate total line width to centre it
+            float totalWidth = 0f;
+            for (int i = 0; i < urlList.size(); i++) {
+                totalWidth += font.getStringWidth(urlList.get(i)) / 1000f * FONT_BODY;
+                if (i < urlList.size() - 1) totalWidth += sepWidth;
+            }
+
+            // If URLs are too wide to fit on one line, fall back to plain writeLine (no hyperlinks)
+            if (totalWidth > PAGE_WIDTH - 2f * MARGIN) {
+                writeLine(String.join(" | ", urlList), fontRegular(), FONT_BODY, Align.CENTER);
+            } else {
+                checkAndNewPage(LINE_SPACING);
+                float cursorX = (PAGE_WIDTH - totalWidth) / 2f;  // centred start
+
+                for (int i = 0; i < urlList.size(); i++) {
+                    String url = urlList.get(i);
+                    writeTokenWithLink(url, font, FONT_BODY, cursorX, url);
+                    cursorX += font.getStringWidth(url) / 1000f * FONT_BODY;
+
+                    if (i < urlList.size() - 1) {
+                        // Plain separator — no link
+                        contentStream.beginText();
+                        contentStream.setFont(font, FONT_BODY);
+                        contentStream.newLineAtOffset(cursorX, yPosition);
+                        contentStream.showText(separator);
+                        contentStream.endText();
+                        cursorX += sepWidth;
+                    }
+                }
+                yPosition -= LINE_SPACING;
+            }
         }
         yPosition -= 6f;
     }
@@ -211,8 +249,18 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
         String dateRange = prj.projectStartDate().format(monthYearFormatter) + " \u2013 "
                 + (prj.isProjectInProgress() ? "Present" : prj.projectEndDate().format(monthYearFormatter));
 
+        String displayLink = "GitHub Link";
+        String actualUrl = prj.projectUrl();
+
+        float linkWidth = fontRegular().getStringWidth(displayLink) / 1000f * FONT_BODY;
+        float linkX     = PAGE_WIDTH - MARGIN - linkWidth;
+        float ySnapshot = yPosition;
+
         writeTwoColumnLine(prj.projectName(), fontBold(),    FONT_BODY,
-                "GitHub Link",    fontRegular(), FONT_BODY);
+                displayLink,    fontRegular(), FONT_BODY);
+
+        // Overlay the annotation exactly where "GitHub Link" was drawn
+        addHyperlink(linkX, ySnapshot, linkWidth, FONT_BODY, actualUrl);
 
         String techStack = (prj.projectTechStacks() != null && !prj.projectTechStacks().isEmpty())
                 ? String.join(", ", prj.projectTechStacks())
@@ -287,6 +335,41 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
             contentStream.newLineAtOffset(bulletIndent, yPosition);
             contentStream.showText((i == 0 ? "\u2022 " : "  ") + lines.get(i));
             contentStream.endText();
+            yPosition -= LINE_SPACING;
+        }
+    }
+
+    /**
+     * Bullet point where the visible text carries a hyperlink annotation.
+     * Falls back to a plain bullet if url is null/blank.
+     *
+     *   • Oracle Certified Java SE 17 Developer   ← entire title is clickable
+     */
+    @Override
+    public void renderLinkedBulletPoint(String text, String url) throws IOException {
+        if (text == null || text.isEmpty()) return;
+        float bulletIndent = MARGIN + 10f;
+        float wrapWidth    = PAGE_WIDTH - bulletIndent - MARGIN - 8f;
+        List<String> lines = wrapTextWithFont(text, fontRegular(), FONT_BODY, wrapWidth);
+
+        for (int i = 0; i < lines.size(); i++) {
+            checkAndNewPage(LINE_SPACING);
+            String prefix    = (i == 0) ? "\u2022 " : "  ";
+            String fullToken = prefix + lines.get(i);
+            float  tokenW    = fontRegular().getStringWidth(fullToken) / 1000f * FONT_BODY;
+
+            contentStream.beginText();
+            contentStream.setFont(fontRegular(), FONT_BODY);
+            contentStream.newLineAtOffset(bulletIndent, yPosition);
+            contentStream.showText(fullToken);
+            contentStream.endText();
+
+            // Only annotate the first line (where the title begins)
+            if (i == 0 && url != null && !url.isBlank()) {
+                float bulletPrefixWidth = fontRegular().getStringWidth("\u2022 ") / 1000f * FONT_BODY;
+                float titleWidth        = fontRegular().getStringWidth(lines.get(0)) / 1000f * FONT_BODY;
+                addHyperlink(bulletIndent + bulletPrefixWidth, yPosition, titleWidth, FONT_BODY, url);
+            }
             yPosition -= LINE_SPACING;
         }
     }
@@ -604,6 +687,46 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
 
     private OtherResponse fetchOtherResponse(Other other) {
         return other != null ? otherMapper.toOtherResponseFromOther(other) : null;
+    }
+
+    /**
+     * Adds a clickable URI annotation over a text region.
+     * Call AFTER writing the text, passing the exact x/y/width used when drawing.
+     *
+     * @param x         left edge of the text (PDF coordinate)
+     * @param y         baseline of the text (PDF coordinate — same value passed to newLineAtOffset)
+     * @param textWidth pixel width of the text  (font.getStringWidth(text)/1000f * size)
+     * @param fontSize  font size (used as approximate line height for the hit-box)
+     * @param url       the URI to open on click
+     */
+    private void addHyperlink(float x, float y, float textWidth,
+                              float fontSize, String url) throws IOException {
+        if (url == null || url.isBlank()) return;
+        PDAnnotationLink link = new PDAnnotationLink();
+        PDActionURI action = new PDActionURI();
+        action.setURI(url);
+        link.setAction(action);
+        // Annotation rect: (x, baseline, x+width, baseline+fontSize)
+        link.setRectangle(new PDRectangle(x, y, textWidth, fontSize));
+        currentPage.getAnnotations().add(link);
+    }
+
+    /**
+     * Writes a single text token at an explicit x coordinate on the current yPosition
+     * and immediately registers a hyperlink annotation over it.
+     * Does NOT advance yPosition — caller is responsible for that.
+     */
+    private void writeTokenWithLink(String text, PDFont font, float size,
+                                    float x, String url) throws IOException {
+        if (text == null || text.isEmpty()) return;
+        contentStream.beginText();
+        contentStream.setFont(font, size);
+        contentStream.newLineAtOffset(x, yPosition);
+        contentStream.showText(text);
+        contentStream.endText();
+
+        float w = font.getStringWidth(text) / 1000f * size;
+        addHyperlink(x, yPosition, w, size, url);
     }
 
 }

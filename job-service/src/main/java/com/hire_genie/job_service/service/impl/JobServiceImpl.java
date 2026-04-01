@@ -1,6 +1,7 @@
 package com.hire_genie.job_service.service.impl;
 
 import com.hire_genie.job_service.dto.job.request.JobRequest;
+import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
@@ -13,10 +14,12 @@ import com.hire_genie.job_service.security.util.LoggedInUser;
 import com.hire_genie.job_service.service.JobService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Slf4j
 @Service
@@ -51,34 +54,60 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
-    public List<JobResponse> getAllJobs() {
+    public JobPageResponse getAllJobs(int page, int size, String sortBy, String sortDir) {
 
-        List<Job> jobs = jobRepository.findAllActiveJobs();
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Job> jobs = jobRepository.findAllActiveJobs(pageable);
         if (jobs.isEmpty()) {
             throw new ResourceNotFoundException("Jobs");
         }
 
-        return jobs.stream()
-                .map(jobMapper::toJobResponseFromJob)
-                .toList();
+        return JobPageResponse.builder()
+                .jobResponse(jobs.map(jobMapper::toJobResponseFromJob).getContent())
+                .isLastPage(jobs.isLast())
+                .totalPages(jobs.getTotalPages())
+                .totalElements((int) jobs.getTotalElements())
+                .pageSize(jobs.getSize())
+                .pageIndex(jobs.getNumber())
+                .sortBy(sortBy)
+                .sortDir(sortDir)
+                .build();
     }
 
     @Override
-    public List<JobResponse> getAllJobsByCompanyId(Long companyId) {
+    public JobPageResponse getAllJobsByCompanyId(Long companyId, int page, int size, String sortBy, String sortDir) {
 
         Company company = companyRepository.findByCompanyId(companyId);
         if (company == null) {
             throw new ResourceNotFoundException("company", companyId);
         }
 
-        List<Job> jobs = jobRepository.findAllActiveJobsByCompany(company);
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<Job> jobs = jobRepository.findAllActiveJobsByCompany(company, pageable);
         if (jobs.isEmpty()) {
             throw new ResourceNotFoundException("Jobs");
         }
 
-        return jobs.stream()
-                .map(jobMapper::toJobResponseFromJob)
-                .toList();
+        return JobPageResponse.builder()
+                .jobResponse(jobs.map(jobMapper::toJobResponseFromJob).getContent())
+                .isLastPage(jobs.isLast())
+                .totalPages(jobs.getTotalPages())
+                .totalElements((int) jobs.getTotalElements())
+                .pageSize(jobs.getSize())
+                .pageIndex(jobs.getNumber())
+                .sortBy(sortBy)
+                .sortDir(sortDir)
+                .build();
     }
 
     @Override

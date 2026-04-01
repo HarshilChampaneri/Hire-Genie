@@ -1,6 +1,7 @@
 package com.hire_genie.job_service.service.impl;
 
 import com.hire_genie.job_service.dto.company.request.CompanyRequest;
+import com.hire_genie.job_service.dto.company.response.CompanyPageResponse;
 import com.hire_genie.job_service.dto.company.response.CompanyResponse;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
@@ -47,7 +48,7 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
-    public Page<CompanyResponse> getAllCompanies(int page, int size, String sortBy, String sortDir) {
+    public CompanyPageResponse getAllCompanies(int page, int size, String sortBy, String sortDir) {
 
         Sort sort = sortDir.equalsIgnoreCase("desc")
                 ? Sort.by(sortBy).descending()
@@ -60,7 +61,17 @@ public class CompanyServiceImpl implements CompanyService {
             throw new ResourceNotFoundException("Company");
         }
 
-        return companies.map(companyMapper::toCompanyResponseFromCompany);
+        return CompanyPageResponse.builder()
+                .companyResponse(companies.map(companyMapper::toCompanyResponseFromCompany).getContent())
+                .isLastPage(companies.isLast())
+                .totalPages(companies.getTotalPages())
+                .totalElements((int) companies.getTotalElements())
+                .pageSize(companies.getSize())
+                .pageIndex(companies.getNumber())
+                .sortBy(sortBy)
+                .sortDir(sortDir)
+                .build();
+
     }
 
     @Override

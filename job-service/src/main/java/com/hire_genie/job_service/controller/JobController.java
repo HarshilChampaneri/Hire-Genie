@@ -1,6 +1,7 @@
 package com.hire_genie.job_service.controller;
 
 import com.hire_genie.job_service.dto.job.request.JobRequest;
+import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.service.JobService;
 import jakarta.validation.Valid;
@@ -26,13 +27,24 @@ public class JobController {
     }
 
     @GetMapping
-    public ResponseEntity<List<JobResponse>> getAllJobs() {
-        return ResponseEntity.ok(jobService.getAllJobs());
+    public ResponseEntity<JobPageResponse> getAllJobs(
+            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size,
+            @RequestParam(name = "sortBy", defaultValue = "jobName", required = false) String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "asc", required = false) String sortDir
+    ) {
+        return ResponseEntity.ok(jobService.getAllJobs(page, size, sortBy, sortDir));
     }
 
     @GetMapping("/{companyId}")
-    public ResponseEntity<List<JobResponse>> getAllJobsByCompanyId(@PathVariable Long companyId) {
-        return ResponseEntity.ok(jobService.getAllJobsByCompanyId(companyId));
+    public ResponseEntity<JobPageResponse> getAllJobsByCompanyId(
+            @PathVariable Long companyId,
+            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size,
+            @RequestParam(name = "sortBy", defaultValue = "jobName", required = false) String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "asc", required = false) String sortDir
+    ) {
+        return ResponseEntity.ok(jobService.getAllJobsByCompanyId(companyId, page, size, sortBy, sortDir));
     }
 
     @PutMapping("/{jobId}")

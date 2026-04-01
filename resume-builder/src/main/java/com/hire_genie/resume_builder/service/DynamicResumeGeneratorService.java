@@ -44,6 +44,8 @@ public interface DynamicResumeGeneratorService {
 
     void renderBulletPoint(String text) throws IOException;
 
+    void renderLinkedBulletPoint(String text, String url) throws IOException;
+
     void renderParagraph(String text) throws IOException;
 
     void writeText(String text, float size, boolean isBold, boolean center) throws IOException;

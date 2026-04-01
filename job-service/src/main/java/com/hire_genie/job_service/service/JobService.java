@@ -1,18 +1,17 @@
 package com.hire_genie.job_service.service;
 
 import com.hire_genie.job_service.dto.job.request.JobRequest;
+import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 public interface JobService {
     @Transactional
     JobResponse addNewJobByCompanyId(Long companyId, JobRequest jobRequest);
 
-    List<JobResponse> getAllJobs();
+    JobPageResponse getAllJobs(int page, int size, String sortBy, String sortDir);
 
-    List<JobResponse> getAllJobsByCompanyId(Long companyId);
+    JobPageResponse getAllJobsByCompanyId(Long companyId, int page, int size, String sortBy, String sortDir);
 
     JobResponse updateJobByJobId(Long jobId, JobRequest jobRequest);
 

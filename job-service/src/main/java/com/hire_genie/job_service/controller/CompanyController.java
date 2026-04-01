@@ -1,6 +1,7 @@
 package com.hire_genie.job_service.controller;
 
 import com.hire_genie.job_service.dto.company.request.CompanyRequest;
+import com.hire_genie.job_service.dto.company.response.CompanyPageResponse;
 import com.hire_genie.job_service.dto.company.response.CompanyResponse;
 import com.hire_genie.job_service.service.CompanyService;
 import jakarta.validation.Valid;
@@ -24,7 +25,7 @@ public class CompanyController {
     }
 
     @GetMapping("/companies")
-    public ResponseEntity<Page<CompanyResponse>> getAllCompanies(
+    public ResponseEntity<CompanyPageResponse> getAllCompanies(
             @RequestParam(name = "page", defaultValue = "0", required = false) int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size,
             @RequestParam(name = "sortBy", defaultValue = "companyName", required = false) String sortBy,
