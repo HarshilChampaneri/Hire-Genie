@@ -29,6 +29,7 @@ import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.apache.pdfbox.pdmodel.interactive.action.PDActionURI;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationLink;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -38,6 +39,7 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGeneratorService {
 
@@ -600,6 +602,17 @@ public class DynamicResumeGeneratorServiceImpl implements DynamicResumeGenerator
 
         // Other
         Other other = otherRepository.findActiveOther(userEmail);
+
+//        return new ResumeRequest(
+//                fetchProfileResponse(profile),
+//                fetchProfileSummaryResponse(profileSummary),
+//                fetchExperienceResponseList(experiences),
+//                fetchProjectResponseList(projects),
+//                fetchSkillSummaryResponse(skill),
+//                fetchEducationResponseList(educations),
+//                fetchCertificateResponseList(certificates),
+//                fetchOtherResponse(other)
+//        );
 
         return ResumeRequest.builder()
                 .profile(fetchProfileResponse(profile))

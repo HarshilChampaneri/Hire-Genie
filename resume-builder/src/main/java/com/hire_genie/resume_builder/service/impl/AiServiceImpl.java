@@ -129,10 +129,10 @@ public class AiServiceImpl implements AiService {
         Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
                 experienceId,
                 loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
+        ).orElseThrow(() -> new ResourceNotFoundException("experiences", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
-            throw new ResourceNotFoundException("experience", experienceId);
+            throw new ResourceNotFoundException("experiences", experienceId);
         }
 
         List<String> experienceDescription = experience.getDescription();

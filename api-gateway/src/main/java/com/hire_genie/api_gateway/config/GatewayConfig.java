@@ -43,6 +43,16 @@ public class GatewayConfig {
                         .route(path("/api/jobs/**"), http())
                         .filter(lb("JOB-SERVICE"))
                         .before(this::addSecurityHeaders)
+                        .build())
+                .and(route("job-recommendation-engine")
+                        .route(path("/api/jobs-recommendation/**"), http())
+                        .filter(lb("JOB-RECOMMENDATION-ENGINE"))
+                        .before(this::addSecurityHeaders)
+                        .build())
+                .and(route("employee-recommendation-engine")
+                        .route(path("/api/employees-recommendation/**"), http())
+                        .filter(lb("EMPLOYEE-RECOMMENDATION-ENGINE"))
+                        .before(this::addSecurityHeaders)
                         .build());
     }
 

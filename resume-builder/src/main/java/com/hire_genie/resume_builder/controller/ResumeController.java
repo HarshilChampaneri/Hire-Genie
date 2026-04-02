@@ -94,4 +94,9 @@ public class ResumeController {
                 .body(pdfBytes);
     }
 
+    @GetMapping("/get-my-profile")
+    public ResponseEntity<ResumeRequest> getMyProfile() {
+        return ResponseEntity.ok(generator.resumeContentAdder());
+    }
+
 }

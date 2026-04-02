@@ -39,10 +39,10 @@ public class ExperienceServiceImpl implements ExperienceService {
         for (Experience experience : experiences) {
             if (!experience.getIsWorkingInCompany()) {
                 if (experience.getEndDate() == null) {
-                    throw new EndDateRequiredException("experience");
+                    throw new EndDateRequiredException("experiences");
                 }
                 if (experience.getEndDate().isBefore(experience.getStartDate())) {
-                    throw new InvalidDateRangeException("experience");
+                    throw new InvalidDateRangeException("experiences");
                 }
             }
             experience.setIsExperienceDeleted(false);
@@ -66,7 +66,7 @@ public class ExperienceServiceImpl implements ExperienceService {
         }
 
         List<ExperienceResponse> experienceResponseList = experiences.stream()
-//                .filter(experience -> Boolean.FALSE.equals(experience.getIsExperienceDeleted()))
+//                .filter(experiences -> Boolean.FALSE.equals(experiences.getIsExperienceDeleted()))
                 .map(experienceMapper::toExperienceResponseFromExperience)
                 .toList();
 
@@ -82,10 +82,10 @@ public class ExperienceServiceImpl implements ExperienceService {
         Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
                 experienceId,
                 loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
+        ).orElseThrow(() -> new ResourceNotFoundException("experiences", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
-            throw new ResourceNotFoundException("experience", experienceId);
+            throw new ResourceNotFoundException("experiences", experienceId);
         }
 
         return experienceMapper.toExperienceResponseFromExperience(experience);
@@ -97,10 +97,10 @@ public class ExperienceServiceImpl implements ExperienceService {
         Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
                 experienceId,
                 loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
+        ).orElseThrow(() -> new ResourceNotFoundException("experiences", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
-            throw new ResourceNotFoundException("experience", experienceId);
+            throw new ResourceNotFoundException("experiences", experienceId);
         }
 
         Experience mappedExperience = experienceMapper.toExperienceFromExperienceRequest(experienceRequest);
@@ -137,7 +137,7 @@ public class ExperienceServiceImpl implements ExperienceService {
         Experience experience = experienceRepository.findByExperienceIdAndUserEmail(
                 experienceId,
                 loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("experience", experienceId));
+        ).orElseThrow(() -> new ResourceNotFoundException("experiences", experienceId));
 
         if (experience.getIsExperienceDeleted()) {
             return "Experience with experienceId: " + experienceId + " is already deleted Before.";

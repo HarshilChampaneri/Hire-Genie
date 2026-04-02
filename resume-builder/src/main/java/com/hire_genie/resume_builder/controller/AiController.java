@@ -38,7 +38,7 @@ public class AiController {
         return ResponseEntity.ok(aiService.rewriteProjectDescriptionWithAi(projectId));
     }
 
-    @PutMapping("/rewrite-experience-description-with-ai/{experienceId}")
+    @PutMapping("/rewrite-experiences-description-with-ai/{experienceId}")
     public ResponseEntity<ExperienceDescriptionResponse> rewriteExperienceDescriptionWithAi(
             @PathVariable Long experienceId
     ) {

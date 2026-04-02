@@ -58,4 +58,5 @@ public interface DynamicResumeGeneratorService {
 
     // Resume Content Adder:
     ResumeRequest resumeContentAdder();
+
 }
