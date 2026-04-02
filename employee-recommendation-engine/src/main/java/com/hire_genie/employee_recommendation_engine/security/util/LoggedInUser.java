@@ -1,0 +1,41 @@
+package com.hire_genie.employee_recommendation_engine.security.util;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
+
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Component
+public class LoggedInUser {
+
+    public String getCurrentLoggedInUser() {
+
+        return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+
+    }
+
+    public Set<String> getAuthorities() {
+
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.toSet());
+
+    }
+
+    public Boolean isRecruiter() {
+        Set<String> userRoles = getAuthorities();
+
+        return userRoles.contains("ROLE_ADMIN") || userRoles.contains("ROLE_RECRUITER");
+    }
+
+    public Boolean isAdmin() {
+        return getAuthorities().contains("ROLE_ADMIN");
+    }
+
+    public Boolean isEmployee() {
+        return getAuthorities().contains("ROLE_ADMIN") || getAuthorities().contains("ROLE_EMPLOYEE");
+    }
+
+}
