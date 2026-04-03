@@ -1,12 +1,15 @@
 package com.hire_genie.resume_builder.controller;
 
 import com.hire_genie.resume_builder.dto.resume.request.ResumeRequest;
+import com.hire_genie.resume_builder.feignClient.EmployeeRecommendationEngineClient;
 import com.hire_genie.resume_builder.service.DynamicResumeGeneratorService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/resumes")
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ import java.io.IOException;
 public class ResumeController {
 
     private final DynamicResumeGeneratorService generator;
+    private final EmployeeRecommendationEngineClient employeeRecommendationEngineClient;
 
     @PostMapping("/generate-pdf")
     public ResponseEntity<byte[]> generateResume() {
@@ -33,17 +38,19 @@ public class ResumeController {
 
             generator.generateResumeToStream(
                     outputStream,
-                    resumeRequest.profile() != null ? resumeRequest.profile() : null,
-                    resumeRequest.summary() != null ? resumeRequest.summary() : null,
-                    resumeRequest.experiences() != null ? resumeRequest.experiences() : null,
-                    resumeRequest.projects() != null ? resumeRequest.projects() : null,
-                    resumeRequest.skills() != null ? resumeRequest.skills() : null,
-                    resumeRequest.educations() != null ? resumeRequest.educations() : null,
-                    resumeRequest.certificates() != null ? resumeRequest.certificates() : null,
-                    resumeRequest.others() != null ? resumeRequest.others() : null
+                    resumeRequest.profile(),
+                    resumeRequest.summary(),
+                    resumeRequest.experiences(),
+                    resumeRequest.projects(),
+                    resumeRequest.skills(),
+                    resumeRequest.educations(),
+                    resumeRequest.certificates(),
+                    resumeRequest.others()
             );
 
             byte[] pdfBytes = outputStream.toByteArray();
+
+            pushToRecommendationEngine(resumeRequest);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Resume.pdf")
@@ -99,4 +106,12 @@ public class ResumeController {
         return ResponseEntity.ok(generator.resumeContentAdder());
     }
 
+    @Async
+    protected void pushToRecommendationEngine(ResumeRequest resumeRequest) {
+        try {
+            employeeRecommendationEngineClient.storeResume(resumeRequest);
+        } catch (Exception e) {
+            log.warn("Failed to push resume to recommendation engine: {}", e.getMessage());
+        }
+    }
 }
