@@ -1,5 +1,6 @@
 package com.hire_genie.employee_recommendation_engine.dtoMappings;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 
 import java.time.YearMonth;
@@ -10,8 +11,10 @@ public record EducationResponse(
         String educationTitle,
         String location,
         String fieldOfStudy,
+        @JsonFormat(pattern = "MM-yyyy")
         YearMonth startDate,
         Boolean isEducationInProgress,
+        @JsonFormat(pattern = "MM-yyyy")
         YearMonth endDate,
         String gradeTitle,
         Double grades

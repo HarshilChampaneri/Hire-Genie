@@ -3,6 +3,7 @@ package com.hire_genie.resume_builder.controller;
 import com.hire_genie.resume_builder.dto.resume.request.ResumeRequest;
 import com.hire_genie.resume_builder.feignClient.EmployeeRecommendationEngineClient;
 import com.hire_genie.resume_builder.service.DynamicResumeGeneratorService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ContentDisposition;
@@ -30,9 +31,13 @@ public class ResumeController {
     private final EmployeeRecommendationEngineClient employeeRecommendationEngineClient;
 
     @PostMapping("/generate-pdf")
-    public ResponseEntity<byte[]> generateResume() {
+    public ResponseEntity<byte[]> generateResume(HttpServletRequest request) {
 
         ResumeRequest resumeRequest = generator.resumeContentAdder();
+
+        String secret = request.getHeader("X-Internal-Secret");
+        String email = request.getHeader("X-User-Email");
+        String roles = request.getHeader("X-User-Roles");
 
         try(ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
@@ -50,7 +55,7 @@ public class ResumeController {
 
             byte[] pdfBytes = outputStream.toByteArray();
 
-            pushToRecommendationEngine(resumeRequest);
+            pushToRecommendationEngine(resumeRequest, secret, email, roles);
 
             return ResponseEntity.ok()
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=Resume.pdf")
@@ -107,9 +112,10 @@ public class ResumeController {
     }
 
     @Async
-    protected void pushToRecommendationEngine(ResumeRequest resumeRequest) {
+    protected void pushToRecommendationEngine(ResumeRequest resumeRequest, String secret, String email, String roles) {
         try {
-            employeeRecommendationEngineClient.storeResume(resumeRequest);
+            // Manually passing headers to the Feign Client via the method arguments
+            employeeRecommendationEngineClient.storeResume(secret, email, roles, resumeRequest);
         } catch (Exception e) {
             log.warn("Failed to push resume to recommendation engine: {}", e.getMessage());
         }

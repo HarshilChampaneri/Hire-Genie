@@ -1,5 +1,6 @@
 package com.hire_genie.employee_recommendation_engine.dtoMappings;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Builder;
 
 import java.time.YearMonth;
@@ -11,8 +12,10 @@ public record ProjectResponse(
         String projectName,
         String projectUrl,
         List<String> projectTechStacks,
+        @JsonFormat(pattern = "MM-yyyy")
         YearMonth projectStartDate,
         Boolean isProjectInProgress,
+        @JsonFormat(pattern = "MM-yyyy")
         YearMonth projectEndDate,
         List<String> projectDescription
 ) {

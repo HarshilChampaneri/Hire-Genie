@@ -14,6 +14,11 @@ import org.springframework.context.annotation.Configuration;
 public class RetrievalAugmentedGenerationConfig {
 
     @Bean
+    public ChatClient chatClient(ChatClient.Builder builder) {
+        return builder.build();
+    }
+
+    @Bean
     public Advisor retrievalAugmentedAdvisor(
             VectorStore vectorStore,
             ChatClient.Builder chatClient
