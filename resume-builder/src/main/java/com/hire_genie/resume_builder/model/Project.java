@@ -1,5 +1,6 @@
 package com.hire_genie.resume_builder.model;
 
+import com.hire_genie.resume_builder.config.YearMonthDateConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -31,11 +32,13 @@ public class Project {
     private List<String> projectTechStacks;
 
     @Column(nullable = false)
+    @Convert(converter = YearMonthDateConverter.class)
     private YearMonth projectStartDate;
 
     @Column(nullable = false)
     private Boolean isProjectInProgress;
 
+    @Convert(converter = YearMonthDateConverter.class)
     private YearMonth projectEndDate;
 
     @Column(nullable = false)

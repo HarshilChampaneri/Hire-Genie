@@ -1,5 +1,6 @@
 package com.hire_genie.resume_builder.model;
 
+import com.hire_genie.resume_builder.config.YearMonthDateConverter;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,11 +29,13 @@ public class Experience {
     private String position;
 
     @Column(nullable = false)
+    @Convert(converter = YearMonthDateConverter.class)
     private YearMonth startDate;
 
     @Column(nullable = false)
     private Boolean isWorkingInCompany = false;
 
+    @Convert(converter = YearMonthDateConverter.class)
     private YearMonth endDate;
 
     @Column(nullable = false)
