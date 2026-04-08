@@ -26,10 +26,7 @@ public record ProfileRequest(
         String mobileNo,
 
         @NotEmpty(message = "Profiles' url can't be left empty")
-        Set<String> urls,
-
-        @Length(min = 1, max = 350, message = "Profile Summary must be between 1 to 350 characters")
-        String profileSummary
+        Set<String> urls
 
 ) {
 }
