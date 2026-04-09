@@ -121,8 +121,29 @@ public class JobServiceImpl implements JobService {
         if (!jobRequest.jobDescription().isEmpty() && !jobRequest.jobDescription().equals(job.getJobDescription())) {
             job.setJobDescription(jobRequest.jobDescription());
         }
-        if (!jobRequest.jobName().isEmpty() && !jobRequest.jobName().equals(job.getJobName())) {
-            job.setJobName(jobRequest.jobName());
+        if (!jobRequest.jobTitle().isEmpty() && !jobRequest.jobTitle().equals(job.getJobTitle())) {
+            job.setJobTitle(jobRequest.jobTitle());
+        }
+        if (jobRequest.jobType() != null && !jobRequest.jobType().equals(job.getJobType())) {
+            job.setJobType(jobRequest.jobType());
+        }
+        if (jobRequest.workMode() != null && !jobRequest.workMode().equals(job.getWorkMode())) {
+            job.setWorkMode(jobRequest.workMode());
+        }
+        if (!jobRequest.location().isEmpty() && !jobRequest.location().equals(job.getLocation())) {
+            job.setLocation(jobRequest.location());
+        }
+        if (jobRequest.minSalary() != null && !jobRequest.minSalary().equals(job.getMinSalary())) {
+            job.setMinSalary(jobRequest.minSalary());
+        }
+        if (jobRequest.maxSalary() != null && !jobRequest.maxSalary().equals(job.getMaxSalary())) {
+            job.setMaxSalary(jobRequest.maxSalary());
+        }
+        if (jobRequest.currency() != null && !jobRequest.currency().equals(job.getCurrency())) {
+            job.setCurrency(jobRequest.currency());
+        }
+        if (jobRequest.vacancies() != null && !jobRequest.vacancies().equals(job.getVacancies())) {
+            job.setVacancies(jobRequest.vacancies());
         }
         job.setIsJobDeleted(false);
 

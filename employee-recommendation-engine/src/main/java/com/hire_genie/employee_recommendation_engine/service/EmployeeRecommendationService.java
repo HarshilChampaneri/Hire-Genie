@@ -1,11 +1,8 @@
 package com.hire_genie.employee_recommendation_engine.service;
 
-import com.hire_genie.employee_recommendation_engine.config.RetrievalAugmentedGenerationConfig;
 import com.hire_genie.employee_recommendation_engine.dtoMappings.EmployeeProfile;
-import com.hire_genie.employee_recommendation_engine.dtoMappings.ResumeRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
