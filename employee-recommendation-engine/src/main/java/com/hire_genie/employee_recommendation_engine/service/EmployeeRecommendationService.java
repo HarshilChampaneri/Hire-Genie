@@ -1,6 +1,7 @@
 package com.hire_genie.employee_recommendation_engine.service;
 
 import com.hire_genie.employee_recommendation_engine.dtoMappings.EmployeeProfile;
+import com.hire_genie.employee_recommendation_engine.feignClient.JobServiceFeignClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -16,8 +17,11 @@ import java.util.List;
 public class EmployeeRecommendationService {
 
     private final VectorStore vectorStore;
+    private final JobServiceFeignClient jobServiceFeignClient;
 
-    public List<EmployeeProfile> recommendEmployee(String jobDescription) {
+    public List<EmployeeProfile> recommendEmployee(String secret, String email, String roles, Long jobId) {
+
+        String jobDescription = jobServiceFeignClient.fetchJobDescription(secret, email, roles, jobId);
 
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(jobDescription)

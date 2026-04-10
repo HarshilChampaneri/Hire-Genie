@@ -3,6 +3,7 @@ package com.hire_genie.job_service.dto.job.request;
 import com.hire_genie.job_service.enums.JobType;
 import com.hire_genie.job_service.enums.WorkMode;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Builder;
 
@@ -19,10 +20,10 @@ public record JobRequest(
         @Size(min = 1, max = 1000, message = "Length of the job description should be between 1 to 1000 characters.")
         String jobDescription,
 
-        @NotBlank
+        @NotNull
         JobType jobType,
 
-        @NotBlank
+        @NotNull
         WorkMode workMode,
 
         @NotBlank
@@ -33,7 +34,7 @@ public record JobRequest(
         BigDecimal maxSalary,
         String currency,
 
-        @NotBlank
+        @NotNull(message = "vacancies can not be null")
         Integer vacancies
 
 ) {

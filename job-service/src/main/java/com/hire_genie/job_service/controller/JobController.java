@@ -30,7 +30,7 @@ public class JobController {
     public ResponseEntity<JobPageResponse> getAllJobs(
             @RequestParam(name = "page", defaultValue = "0", required = false) int page,
             @RequestParam(name = "size", defaultValue = "10", required = false) int size,
-            @RequestParam(name = "sortBy", defaultValue = "jobName", required = false) String sortBy,
+            @RequestParam(name = "sortBy", defaultValue = "jobType", required = false) String sortBy,
             @RequestParam(name = "sortDir", defaultValue = "asc", required = false) String sortDir
     ) {
         return ResponseEntity.ok(jobService.getAllJobs(page, size, sortBy, sortDir));
