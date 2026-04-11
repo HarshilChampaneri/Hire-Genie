@@ -4,6 +4,7 @@ import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.service.JobService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +22,10 @@ public class JobController {
     @PostMapping("/{companyId}")
     public ResponseEntity<JobResponse> addNewJob(
             @PathVariable Long companyId,
-            @RequestBody @Valid JobRequest jobRequest
+            @RequestBody @Valid JobRequest jobRequest,
+            HttpServletRequest request
     ) {
-        return ResponseEntity.ok(jobService.addNewJobByCompanyId(companyId, jobRequest));
+        return ResponseEntity.ok(jobService.addNewJobByCompanyId(companyId, jobRequest, request));
     }
 
     @GetMapping

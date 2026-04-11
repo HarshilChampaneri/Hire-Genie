@@ -5,6 +5,7 @@ import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
+import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
 import com.hire_genie.job_service.mapper.JobMapper;
 import com.hire_genie.job_service.model.Company;
 import com.hire_genie.job_service.model.Job;
@@ -12,6 +13,7 @@ import com.hire_genie.job_service.repository.CompanyRepository;
 import com.hire_genie.job_service.repository.JobRepository;
 import com.hire_genie.job_service.security.util.LoggedInUser;
 import com.hire_genie.job_service.service.JobService;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -30,10 +32,11 @@ public class JobServiceImpl implements JobService {
     private final CompanyRepository companyRepository;
     private final JobMapper jobMapper;
     private final LoggedInUser loggedInUser;
+    private final JobRecommendationServiceFeignClient jobRecommendationServiceFeignClient;
 
     @Override
     @Transactional
-    public JobResponse addNewJobByCompanyId(Long companyId, JobRequest jobRequest) {
+    public JobResponse addNewJobByCompanyId(Long companyId, JobRequest jobRequest, HttpServletRequest request) {
 
         if (!loggedInUser.isRecruiter()) {
             throw new InvalidAccessException("You are unauthorized to access this service.");
@@ -50,7 +53,15 @@ public class JobServiceImpl implements JobService {
         job.setCompany(company);
         company.getJobs().add(job);
 
-        return jobMapper.toJobResponseFromJob(jobRepository.save(job));
+        JobResponse jobResponse = jobMapper.toJobResponseFromJob(jobRepository.save(job));
+
+        String secret = request.getHeader("X-Internal-Secret");
+        String email = request.getHeader("X-User-Email");
+        String roles = request.getHeader("X-User-Roles");
+
+        jobRecommendationServiceFeignClient.storeJobProfile(secret, email, roles, jobResponse);
+
+        return jobResponse;
     }
 
     @Override
