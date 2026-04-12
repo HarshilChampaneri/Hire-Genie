@@ -1,8 +1,8 @@
 package com.hire_genie.job_recommendation_engine.exception.handler;
 
-import com.hire_genie.employee_recommendation_engine.dtoMappings.ErrorResponse;
-import com.hire_genie.employee_recommendation_engine.exception.InvalidAccessException;
-import com.hire_genie.employee_recommendation_engine.exception.ResourceNotFoundException;
+import com.hire_genie.job_recommendation_engine.dtoMappings.employeeDTO.ErrorResponse;
+import com.hire_genie.job_recommendation_engine.exception.InvalidAccessException;
+import com.hire_genie.job_recommendation_engine.exception.ResourceNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;

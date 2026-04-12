@@ -6,7 +6,6 @@ import com.hire_genie.job_recommendation_engine.enums.JobType;
 import com.hire_genie.job_recommendation_engine.enums.WorkMode;
 import com.hire_genie.job_recommendation_engine.exception.InvalidAccessException;
 import com.hire_genie.job_recommendation_engine.feignClient.UserProfileFeignClient;
-import com.hire_genie.job_recommendation_engine.repository.JobRecommendationRepository;
 import com.hire_genie.job_recommendation_engine.security.util.LoggedInUser;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -60,14 +59,14 @@ public class JobRecommendationService {
         var metaData = document.getMetadata();
 
         return JobResponse.builder()
-                .jobId((Long) metaData.get("jobId"))
+                .jobId(metaData.get("jobId") != null ? Long.valueOf(metaData.get("jobId").toString()) : null)
                 .jobTitle((String) metaData.get("jobTitle"))
                 .jobDescription((String) metaData.get("jobDescription"))
-                .jobType((JobType) metaData.get("jobType"))
-                .workMode((WorkMode) metaData.get("workMode"))
+                .jobType(JobType.valueOf(metaData.get("jobType").toString()))
+                .workMode(WorkMode.valueOf(metaData.get("workMode").toString()))
                 .location((String) metaData.get("location"))
-                .minSalary((BigDecimal) metaData.get("minSalary"))
-                .maxSalary((BigDecimal) metaData.get("maxSalary"))
+                .minSalary(metaData.get("minSalary") != null ? new BigDecimal(metaData.get("minSalary").toString()) : null)
+                .maxSalary(metaData.get("maxSalary") != null ? new BigDecimal(metaData.get("maxSalary").toString()) : null)
                 .currency((String) metaData.get("currency"))
                 .vacancies((Integer) metaData.get("vacancies"))
                 .build();

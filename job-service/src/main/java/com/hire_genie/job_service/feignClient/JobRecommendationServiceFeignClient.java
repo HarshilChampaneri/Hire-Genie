@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 
 @FeignClient(
-        name = "job-recommendation-service",
+        name = "job-recommendation-engine",
         url = "${services.job-recommendation.url}",
         configuration = FeignClientConfig.class
 )
@@ -23,4 +23,3 @@ public interface JobRecommendationServiceFeignClient {
     );
 
 }
-

@@ -20,6 +20,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,7 +60,7 @@ public class JobServiceImpl implements JobService {
         String email = request.getHeader("X-User-Email");
         String roles = request.getHeader("X-User-Roles");
 
-        jobRecommendationServiceFeignClient.storeJobProfile(secret, email, roles, jobResponse);
+        pushToJobRecommendationEngine(secret, email, roles, jobResponse);
 
         return jobResponse;
     }
@@ -173,6 +174,15 @@ public class JobServiceImpl implements JobService {
         jobRepository.save(job);
 
         return "Job with jobId: " + jobId + " has been deleted successfully.";
+    }
+
+    @Async
+    protected void pushToJobRecommendationEngine(String secret, String email, String roles, JobResponse jobResponse) {
+        try {
+            jobRecommendationServiceFeignClient.storeJobProfile(secret, email, roles, jobResponse);
+        } catch (Exception e) {
+            log.warn("Failed to push Job to Job Recommendation Engine: {}", e.getMessage());
+        }
     }
 
 }

@@ -26,8 +26,8 @@ public class JobVectorStoreService {
     @Transactional
     public void upsertJobProfile(JobResponse jobResponse) {
 
-        if (jobResponse == null || jobResponse.jobId() == null) {
-            log.warn("Skipping upsert: Job or JobID is null");
+        if (jobResponse.jobId() == null) {
+            log.warn("Skipping upsert: JobID is null");
             return;
         }
 
