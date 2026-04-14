@@ -28,7 +28,7 @@ public class Project {
     @Column(nullable = false)
     private String projectUrl;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text[]")
     private List<String> projectTechStacks;
 
     @Column(nullable = false)
@@ -41,7 +41,7 @@ public class Project {
     @Convert(converter = YearMonthDateConverter.class)
     private YearMonth projectEndDate;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text[]")
     private List<String> projectDescription;
 
     @Column(nullable = false)

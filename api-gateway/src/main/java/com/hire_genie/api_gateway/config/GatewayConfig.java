@@ -53,6 +53,11 @@ public class GatewayConfig {
                         .route(path("/api/employees-recommendation/**"), http())
                         .filter(lb("EMPLOYEE-RECOMMENDATION-ENGINE"))
                         .before(this::addSecurityHeaders)
+                        .build())
+                .and(route("roleplay-service")
+                        .route(path("/api/roleplay/**"), http())
+                        .filter(lb("ROLEPLAY-SERVICE"))
+                        .before(this::addSecurityHeaders)
                         .build());
     }
 

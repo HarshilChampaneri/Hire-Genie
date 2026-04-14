@@ -77,7 +77,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse getProjectById(Long projectId) {
 
-        Project project = projectRepository.findByProjectIdAndUserEmail(
+        Project project = projectRepository.findByProjectIdAndUserEmailAndIsProjectDeletedFalse(
                 projectId,
                 loggedInUser.getCurrentLoggedInUser()
         ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
@@ -92,7 +92,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public ProjectResponse updateProject(Long projectId, ProjectRequest projectRequest) {
 
-        Project project = projectRepository.findByProjectIdAndUserEmail(
+        Project project = projectRepository.findByProjectIdAndUserEmailAndIsProjectDeletedFalse(
                 projectId,
                 loggedInUser.getCurrentLoggedInUser()
         ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
@@ -139,7 +139,7 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     public String deleteProject(Long projectId) {
 
-        Project project = projectRepository.findByProjectIdAndUserEmail(
+        Project project = projectRepository.findByProjectIdAndUserEmailAndIsProjectDeletedFalse(
                 projectId,
                 loggedInUser.getCurrentLoggedInUser()
         ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));

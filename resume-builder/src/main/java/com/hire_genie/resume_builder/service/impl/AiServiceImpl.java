@@ -81,15 +81,14 @@ public class AiServiceImpl implements AiService {
     @Override
     public ProjectDescriptionResponse rewriteProjectDescriptionWithAi(Long projectId) {
 
-        log.warn("Fetching Project.");
-        Project project = projectRepository.findByProjectIdAndUserEmail(
-                projectId,
-                loggedInUser.getCurrentLoggedInUser()
-        ).orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
-        log.warn("Project fetched successfully.");
+        String email = loggedInUser.getCurrentLoggedInUser();
+        log.warn("Fetching Project ID: {} for Email: {}", projectId, email);
 
-        if (project.getIsProjectDeleted()) {
-            throw new ResourceNotFoundException("project", projectId);
+        Project project = projectRepository.findById(projectId)
+                .orElseThrow(() -> new ResourceNotFoundException("Project", projectId));
+
+        if (!project.getUserEmail().equals(email) || project.getIsProjectDeleted()) {
+            throw new ResourceNotFoundException("Access Denied or Deleted", projectId);
         }
 
         List<String> projectDescription = project.getProjectDescription();

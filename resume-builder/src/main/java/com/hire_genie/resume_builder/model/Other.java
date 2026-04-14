@@ -20,7 +20,7 @@ public class Other {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long otherId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text[]")
     private List<String> description;
 
     @Column(nullable = false)

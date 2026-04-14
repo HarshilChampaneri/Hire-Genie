@@ -12,7 +12,13 @@ import java.util.Optional;
 @Repository
 public interface ProjectRepository extends JpaRepository<Project, Long> {
 
-    Optional<Project> findByProjectIdAndUserEmail(Long projectId, String userEmail);
+    @Query("""
+        SELECT p FROM Project p
+        WHERE p.projectId = :projectId 
+        AND p.userEmail = :userEmail 
+        AND p.isProjectDeleted = false
+        """)
+    Optional<Project> findByProjectIdAndUserEmailAndIsProjectDeletedFalse(Long projectId, String userEmail);
 
     @Query("""
             SELECT p FROM Project p

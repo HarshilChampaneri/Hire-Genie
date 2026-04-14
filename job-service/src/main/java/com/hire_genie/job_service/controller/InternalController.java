@@ -1,5 +1,6 @@
 package com.hire_genie.job_service.controller;
 
+import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.service.impl.InternalJobService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,13 @@ public class InternalController {
     @GetMapping("/fetch/job-description/{jobId}")
     public ResponseEntity<String> fetchJobDescription(@PathVariable Long jobId) {
         return ResponseEntity.ok(internalJobService.fetchJobDescription(jobId));
+    }
+
+    @GetMapping("/fetch/job/{jobId}")
+    public ResponseEntity<JobResponse> fetchJobByJobId(
+            @PathVariable Long jobId
+    ) {
+        return ResponseEntity.ok(internalJobService.fetchJobByJobId(jobId));
     }
 
 }

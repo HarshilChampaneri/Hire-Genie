@@ -32,4 +32,9 @@ public interface JobRepository extends JpaRepository<Job, Long> {
             """)
     Optional<Job> findByJobId(@Param("jobId") Long jobId, @Param("userEmail") String userEmail);
 
+    @Query("""
+            SELECT j FROM Job j
+            WHERE j.isJobDeleted = false AND j.jobId = :jobId
+            """)
+    Optional<Job> findByJobIdIgnoringUserEmail(@Param("jobId") Long jobId);
 }

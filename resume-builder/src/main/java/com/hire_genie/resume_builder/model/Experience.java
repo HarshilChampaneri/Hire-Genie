@@ -38,7 +38,7 @@ public class Experience {
     @Convert(converter = YearMonthDateConverter.class)
     private YearMonth endDate;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "text[]")
     private List<String> description;
 
     @Column(nullable = false)
