@@ -14,6 +14,10 @@ import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.EducationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +31,11 @@ public class EducationServiceImpl implements EducationService {
     private final EducationMapper educationMapper;
     private final LoggedInUser loggedInUser;
 
+    private static final String REDIS_KEY_1 = "allEducations";
+    private static final String REDIS_KEY_2 = "educations";
+
     @Override
+    @CacheEvict(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
     public List<EducationResponse> addEducations(EducationRequestList educationRequestList) {
 
         List<Education> educations = educationRequestList
@@ -57,6 +65,7 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
+    @Cacheable(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
     public EducationResponseList getAllEducations() throws Exception {
 
         List<Education> educations = educationRepository.findActiveEducations(loggedInUser.getCurrentLoggedInUser());
@@ -77,6 +86,10 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
+    @Cacheable(
+            value = REDIS_KEY_2,
+            key = "#educationId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+    )
     public EducationResponse getEducationById(Long educationId) {
 
         Education education = educationRepository.findByEducationIdAndUserEmail(
@@ -92,6 +105,16 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
+    @Caching(
+            put = @CachePut(
+                    value = REDIS_KEY_2,
+                    key = "#educationId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+            ),
+            evict = @CacheEvict(
+                    value = REDIS_KEY_1,
+                    key = "@loggedInUser.getCurrentLoggedInUser()"
+            )
+    )
     public EducationResponse updateEducation(Long educationId, EducationRequest educationRequest) {
 
         Education education = educationRepository.findByEducationIdAndUserEmail(
@@ -138,6 +161,18 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(
+                            value = REDIS_KEY_2,
+                            key = "#educationId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+                    ),
+                    @CacheEvict(
+                            value = REDIS_KEY_1,
+                            key = "@loggedInUser.getCurrentLoggedInUser()"
+                    )
+            }
+    )
     public String deleteEducation(Long educationId) {
 
         Education education = educationRepository.findByEducationIdAndUserEmail(

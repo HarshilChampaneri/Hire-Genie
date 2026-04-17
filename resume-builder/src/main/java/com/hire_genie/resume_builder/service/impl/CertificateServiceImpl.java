@@ -12,6 +12,10 @@ import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.CertificateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,7 +29,11 @@ public class CertificateServiceImpl implements CertificateService {
     private final CertificateMapper certificateMapper;
     private final LoggedInUser loggedInUser;
 
+    private static final String REDIS_KEY_1 = "allCertificates";
+    private static final String REDIS_KEY_2 = "certificates";
+
     @Override
+    @CacheEvict(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
     public List<CertificateResponse> addCertificates(
             CertificateRequestList certificateRequestList
     ) {
@@ -51,6 +59,7 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
+    @Cacheable(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
     public CertificateResponseList getAllCertificates() throws Exception {
 
         List<Certificate> certificates = certificateRepository.findActiveCertificates(loggedInUser.getCurrentLoggedInUser());
@@ -71,6 +80,10 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
+    @Cacheable(
+            value = REDIS_KEY_2,
+            key = "#certificateId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+    )
     public CertificateResponse getCertificateById(Long certificateId) {
 
         Certificate certificate = certificateRepository.findByCertificateIdAndUserEmail(
@@ -87,6 +100,16 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
+    @Caching(
+            put = @CachePut(
+                    value = REDIS_KEY_2,
+                    key = "#certificateId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+            ),
+            evict = @CacheEvict(
+                    value = REDIS_KEY_1,
+                    key = "@loggedInUser.getCurrentLoggedInUser()"
+            )
+    )
     public CertificateResponse updateCertificate(Long certificateId, CertificateRequest certificateRequest) {
 
         Certificate certificate = certificateRepository.findByCertificateIdAndUserEmail(
@@ -112,6 +135,18 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(
+                            value = REDIS_KEY_2,
+                            key = "#certificateId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+                    ),
+                    @CacheEvict(
+                            value = REDIS_KEY_1,
+                            key = "@loggedInUser.getCurrentLoggedInUser()"
+                    )
+            }
+    )
     public String deleteCertificate(Long certificateId) {
 
         Certificate certificate = certificateRepository.findByCertificateIdAndUserEmail(

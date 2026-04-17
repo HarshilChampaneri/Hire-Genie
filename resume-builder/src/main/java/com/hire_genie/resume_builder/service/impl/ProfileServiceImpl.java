@@ -9,6 +9,9 @@ import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.ProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -20,7 +23,10 @@ public class ProfileServiceImpl implements ProfileService {
     private final ProfileMapper profileMapper;
     private final LoggedInUser loggedInUser;
 
+    private static final String REDIS_KEY = "profile";
+
     @Override
+    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProfileResponse addNewProfile(ProfileRequest profileRequest) throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -39,6 +45,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    @Cacheable(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProfileResponse getYourProfile() throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -53,6 +60,7 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
+    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProfileResponse updateYourProfile(ProfileRequest profileRequest) throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -86,7 +94,8 @@ public class ProfileServiceImpl implements ProfileService {
     }
 
     @Override
-    public String deleteYourProfile() throws Exception {
+    @CacheEvict(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    public String deleteYourProfile() {
 
         Profile existingProfile = profileRepository.findExistingProfile(loggedInUser.getCurrentLoggedInUser());
         if (existingProfile == null) {

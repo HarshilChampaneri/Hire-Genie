@@ -14,6 +14,10 @@ import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.ProjectService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -27,7 +31,11 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
     private final LoggedInUser loggedInUser;
 
+    private static final String REDIS_KEY_1 = "allProjects";
+    private static final String REDIS_KEY_2 = "projects";
+
     @Override
+    @CacheEvict(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
     public List<ProjectResponse> addProjects(ProjectRequestList projectRequestList) {
 
         List<Project> projects = projectRequestList
@@ -56,6 +64,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProjectResponseList getAllProjects() throws Exception {
 
         List<Project> projects = projectRepository.findActiveProjects(loggedInUser.getCurrentLoggedInUser());
@@ -75,6 +84,10 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Cacheable(
+            value = REDIS_KEY_2,
+            key = "#projectId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+    )
     public ProjectResponse getProjectById(Long projectId) {
 
         Project project = projectRepository.findByProjectIdAndUserEmailAndIsProjectDeletedFalse(
@@ -90,6 +103,16 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Caching(
+            put = @CachePut(
+                    value = REDIS_KEY_2,
+                    key = "#projectId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+            ),
+            evict = @CacheEvict(
+                    value = REDIS_KEY_1,
+                    key = "@loggedInUser.getCurrentLoggedInUser()"
+            )
+    )
     public ProjectResponse updateProject(Long projectId, ProjectRequest projectRequest) {
 
         Project project = projectRepository.findByProjectIdAndUserEmailAndIsProjectDeletedFalse(
@@ -137,6 +160,18 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(
+                            value = REDIS_KEY_2,
+                            key = "#projectId + '_' + @loggedInUser.getCurrentLoggedInUser()"
+                    ),
+                    @CacheEvict(
+                            value = REDIS_KEY_1,
+                            key = "@loggedInUser.getCurrentLoggedInUser()"
+                    )
+            }
+    )
     public String deleteProject(Long projectId) {
 
         Project project = projectRepository.findByProjectIdAndUserEmailAndIsProjectDeletedFalse(

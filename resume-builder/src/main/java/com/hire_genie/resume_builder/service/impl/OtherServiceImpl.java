@@ -9,6 +9,9 @@ import com.hire_genie.resume_builder.security.util.LoggedInUser;
 import com.hire_genie.resume_builder.service.OtherService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,7 +25,10 @@ public class OtherServiceImpl implements OtherService {
     private final OtherMapper otherMapper;
     private final LoggedInUser loggedInUser;
 
+    private static final String REDIS_KEY = "other";
+
     @Override
+    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public OtherResponse addOthers(OtherRequest otherRequest) {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -49,6 +55,7 @@ public class OtherServiceImpl implements OtherService {
     }
 
     @Override
+    @Cacheable(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public OtherResponse getOther() throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -58,11 +65,12 @@ public class OtherServiceImpl implements OtherService {
             throw new Exception("No Other found.");
         }
 
-        return otherMapper.toOtherResponseFromOther(otherRepository.save(other));
+        return otherMapper.toOtherResponseFromOther(other);
 
     }
 
     @Override
+    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public OtherResponse updateOther(OtherRequest otherRequest) throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -82,6 +90,7 @@ public class OtherServiceImpl implements OtherService {
     }
 
     @Override
+    @CacheEvict(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public String deleteOther() {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
