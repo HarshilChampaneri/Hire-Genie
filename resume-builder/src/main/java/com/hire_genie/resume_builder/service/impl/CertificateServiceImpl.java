@@ -20,6 +20,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.hire_genie.resume_builder.util.StaticConstants.ALL_CERTIFICATES;
+import static com.hire_genie.resume_builder.util.StaticConstants.CERTIFICATES;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -29,11 +32,8 @@ public class CertificateServiceImpl implements CertificateService {
     private final CertificateMapper certificateMapper;
     private final LoggedInUser loggedInUser;
 
-    private static final String REDIS_KEY_1 = "allCertificates";
-    private static final String REDIS_KEY_2 = "certificates";
-
     @Override
-    @CacheEvict(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CacheEvict(value = ALL_CERTIFICATES, key = "@loggedInUser.getCurrentLoggedInUser()")
     public List<CertificateResponse> addCertificates(
             CertificateRequestList certificateRequestList
     ) {
@@ -59,7 +59,7 @@ public class CertificateServiceImpl implements CertificateService {
     }
 
     @Override
-    @Cacheable(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @Cacheable(value = ALL_CERTIFICATES, key = "@loggedInUser.getCurrentLoggedInUser()")
     public CertificateResponseList getAllCertificates() throws Exception {
 
         List<Certificate> certificates = certificateRepository.findActiveCertificates(loggedInUser.getCurrentLoggedInUser());
@@ -81,7 +81,7 @@ public class CertificateServiceImpl implements CertificateService {
 
     @Override
     @Cacheable(
-            value = REDIS_KEY_2,
+            value = CERTIFICATES,
             key = "#certificateId + '_' + @loggedInUser.getCurrentLoggedInUser()"
     )
     public CertificateResponse getCertificateById(Long certificateId) {
@@ -102,11 +102,11 @@ public class CertificateServiceImpl implements CertificateService {
     @Override
     @Caching(
             put = @CachePut(
-                    value = REDIS_KEY_2,
+                    value = CERTIFICATES,
                     key = "#certificateId + '_' + @loggedInUser.getCurrentLoggedInUser()"
             ),
             evict = @CacheEvict(
-                    value = REDIS_KEY_1,
+                    value = ALL_CERTIFICATES,
                     key = "@loggedInUser.getCurrentLoggedInUser()"
             )
     )
@@ -138,11 +138,11 @@ public class CertificateServiceImpl implements CertificateService {
     @Caching(
             evict = {
                     @CacheEvict(
-                            value = REDIS_KEY_2,
+                            value = CERTIFICATES,
                             key = "#certificateId + '_' + @loggedInUser.getCurrentLoggedInUser()"
                     ),
                     @CacheEvict(
-                            value = REDIS_KEY_1,
+                            value = ALL_CERTIFICATES,
                             key = "@loggedInUser.getCurrentLoggedInUser()"
                     )
             }

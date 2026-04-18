@@ -22,6 +22,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.hire_genie.resume_builder.util.StaticConstants.ALL_PROJECTS;
+import static com.hire_genie.resume_builder.util.StaticConstants.PROJECTS;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,11 +34,8 @@ public class ProjectServiceImpl implements ProjectService {
     private final ProjectMapper projectMapper;
     private final LoggedInUser loggedInUser;
 
-    private static final String REDIS_KEY_1 = "allProjects";
-    private static final String REDIS_KEY_2 = "projects";
-
     @Override
-    @CacheEvict(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CacheEvict(value = ALL_PROJECTS, key = "@loggedInUser.getCurrentLoggedInUser()")
     public List<ProjectResponse> addProjects(ProjectRequestList projectRequestList) {
 
         List<Project> projects = projectRequestList
@@ -64,7 +64,7 @@ public class ProjectServiceImpl implements ProjectService {
     }
 
     @Override
-    @Cacheable(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @Cacheable(value = ALL_PROJECTS, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProjectResponseList getAllProjects() throws Exception {
 
         List<Project> projects = projectRepository.findActiveProjects(loggedInUser.getCurrentLoggedInUser());
@@ -85,7 +85,7 @@ public class ProjectServiceImpl implements ProjectService {
 
     @Override
     @Cacheable(
-            value = REDIS_KEY_2,
+            value = PROJECTS,
             key = "#projectId + '_' + @loggedInUser.getCurrentLoggedInUser()"
     )
     public ProjectResponse getProjectById(Long projectId) {
@@ -105,11 +105,11 @@ public class ProjectServiceImpl implements ProjectService {
     @Override
     @Caching(
             put = @CachePut(
-                    value = REDIS_KEY_2,
+                    value = PROJECTS,
                     key = "#projectId + '_' + @loggedInUser.getCurrentLoggedInUser()"
             ),
             evict = @CacheEvict(
-                    value = REDIS_KEY_1,
+                    value = ALL_PROJECTS,
                     key = "@loggedInUser.getCurrentLoggedInUser()"
             )
     )
@@ -163,11 +163,11 @@ public class ProjectServiceImpl implements ProjectService {
     @Caching(
             evict = {
                     @CacheEvict(
-                            value = REDIS_KEY_2,
+                            value = PROJECTS,
                             key = "#projectId + '_' + @loggedInUser.getCurrentLoggedInUser()"
                     ),
                     @CacheEvict(
-                            value = REDIS_KEY_1,
+                            value = ALL_PROJECTS,
                             key = "@loggedInUser.getCurrentLoggedInUser()"
                     )
             }

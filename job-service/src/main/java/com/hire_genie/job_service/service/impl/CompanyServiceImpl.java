@@ -13,6 +13,10 @@ import com.hire_genie.job_service.security.util.LoggedInUser;
 import com.hire_genie.job_service.service.CompanyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -20,6 +24,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+
+import static com.hire_genie.job_service.util.StaticConstants.COMPANIES;
+import static com.hire_genie.job_service.util.StaticConstants.COMPANIES_PAGE;
 
 @Slf4j
 @Service
@@ -31,6 +38,10 @@ public class CompanyServiceImpl implements CompanyService {
     private final LoggedInUser loggedInUser;
 
     @Override
+    @Caching(
+            put = @CachePut(value = COMPANIES, key = "#result.companyId"),
+            evict = @CacheEvict(value = COMPANIES_PAGE, allEntries = true)
+    )
     public CompanyResponse addNewCompany(CompanyRequest companyRequest) {
 
         if (!loggedInUser.isRecruiter()) {
@@ -48,6 +59,10 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    @Cacheable(
+            value = COMPANIES_PAGE,
+            key = "#page + '_' + #size + '_' + #sortBy + '_' + #sortDir"
+    )
     public CompanyPageResponse getAllCompanies(int page, int size, String sortBy, String sortDir) {
 
         Sort sort = sortDir.equalsIgnoreCase("desc")
@@ -75,6 +90,10 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    @Caching(
+            put = @CachePut(value = COMPANIES, key = "#companyId"),
+            evict = @CacheEvict(value = COMPANIES_PAGE, allEntries = true)
+    )
     public CompanyResponse updateCompany(Long companyId, CompanyRequest companyRequest) {
 
         if (!loggedInUser.isRecruiter()) {
@@ -101,6 +120,12 @@ public class CompanyServiceImpl implements CompanyService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = COMPANIES, key = "#companyId"),
+                    @CacheEvict(value = COMPANIES_PAGE, allEntries = true)
+            }
+    )
     public String deleteCompanyById(Long companyId) {
 
         if (!loggedInUser.isRecruiter()) {
@@ -123,5 +148,4 @@ public class CompanyServiceImpl implements CompanyService {
 
         return "Company with companyId: " + companyId + " deleted successfully.";
     }
-
 }

@@ -14,6 +14,8 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import static com.hire_genie.resume_builder.util.StaticConstants.PROFILE_SUMMARY;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -23,10 +25,8 @@ public class ProfileSummaryServiceImpl implements ProfileSummaryService {
     private final ProfileSummaryMapper profileSummaryMapper;
     private final LoggedInUser loggedInUser;
 
-    private static final String REDIS_KEY = "profileSummary";
-
     @Override
-    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CachePut(value = PROFILE_SUMMARY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProfileSummaryResponse addNewProfileSummary(ProfileSummaryRequest profileSummaryRequest) throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -44,7 +44,7 @@ public class ProfileSummaryServiceImpl implements ProfileSummaryService {
     }
 
     @Override
-    @Cacheable(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @Cacheable(value = PROFILE_SUMMARY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProfileSummaryResponse getYourProfileSummary() throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -58,7 +58,7 @@ public class ProfileSummaryServiceImpl implements ProfileSummaryService {
     }
 
     @Override
-    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CachePut(value = PROFILE_SUMMARY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ProfileSummaryResponse updateProfileSummary(ProfileSummaryRequest profileSummaryRequest) throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -80,7 +80,7 @@ public class ProfileSummaryServiceImpl implements ProfileSummaryService {
     }
 
     @Override
-    @CacheEvict(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CacheEvict(value = PROFILE_SUMMARY, key = "@loggedInUser.getCurrentLoggedInUser()")
     public String deleteProfileSummary() {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();

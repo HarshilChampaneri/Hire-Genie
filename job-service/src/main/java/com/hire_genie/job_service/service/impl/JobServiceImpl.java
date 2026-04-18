@@ -16,6 +16,10 @@ import com.hire_genie.job_service.service.JobService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +27,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import static com.hire_genie.job_service.util.StaticConstants.*;
 
 @Slf4j
 @Service
@@ -37,6 +43,13 @@ public class JobServiceImpl implements JobService {
 
     @Override
     @Transactional
+    @Caching(
+            put = @CachePut(value = JOBS, key = "#result.jobId"),
+            evict = {
+                    @CacheEvict(value = JOBS_PAGE, allEntries = true),
+                    @CacheEvict(value = JOBS_BY_COMPANY_PAGE, key = "#companyId + '-*'", allEntries = true)
+            }
+    )
     public JobResponse addNewJobByCompanyId(Long companyId, JobRequest jobRequest, HttpServletRequest request) {
 
         if (!loggedInUser.isRecruiter()) {
@@ -66,6 +79,10 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Cacheable(
+            value = JOBS_PAGE,
+            key = "#page + '_' + #size + '_' + #sortBy + '_' + #sortDir"
+    )
     public JobPageResponse getAllJobs(int page, int size, String sortBy, String sortDir) {
 
         Sort sort = sortDir.equalsIgnoreCase("desc")
@@ -92,6 +109,10 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Cacheable(
+            value = JOBS_BY_COMPANY_PAGE,
+            key = "#companyId + '_' + #page + '_' + #size + '_' + #sortBy + '_' + #sortDir"
+    )
     public JobPageResponse getAllJobsByCompanyId(Long companyId, int page, int size, String sortBy, String sortDir) {
 
         Company company = companyRepository.findByCompanyId(companyId);
@@ -123,6 +144,13 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Caching(
+            put = @CachePut(value = JOBS, key = "#jobId"),
+            evict = {
+                    @CacheEvict(value = JOBS_PAGE, allEntries = true),
+                    @CacheEvict(value = JOBS_BY_COMPANY_PAGE, allEntries = true)
+            }
+    )
     public JobResponse updateJobByJobId(Long jobId, JobRequest jobRequest) {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -163,6 +191,13 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Caching(
+            evict = {
+                    @CacheEvict(value = JOBS, key = "#jobId"),
+                    @CacheEvict(value = JOBS_PAGE, allEntries = true),
+                    @CacheEvict(value = JOBS_BY_COMPANY_PAGE, allEntries = true)
+            }
+    )
     public String deleteJobById(Long jobId) {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();

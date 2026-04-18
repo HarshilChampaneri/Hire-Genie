@@ -22,6 +22,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.hire_genie.resume_builder.util.StaticConstants.ALL_EXPERIENCES;
+import static com.hire_genie.resume_builder.util.StaticConstants.EXPERIENCES;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,11 +34,8 @@ public class ExperienceServiceImpl implements ExperienceService {
     private final ExperienceMapper experienceMapper;
     private final LoggedInUser loggedInUser;
 
-    private static final String REDIS_KEY_1 = "allExperiences";
-    private static final String REDIS_KEY_2 = "experiences";
-
     @Override
-    @CacheEvict(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CacheEvict(value = ALL_EXPERIENCES, key = "@loggedInUser.getCurrentLoggedInUser()")
     public List<ExperienceResponse> addExperiences(ExperienceRequestList experienceRequestList) {
 
         List<Experience> experiences = experienceRequestList
@@ -65,7 +65,7 @@ public class ExperienceServiceImpl implements ExperienceService {
     }
 
     @Override
-    @Cacheable(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @Cacheable(value = ALL_EXPERIENCES, key = "@loggedInUser.getCurrentLoggedInUser()")
     public ExperienceResponseList getAllExperiences() throws Exception {
 
         List<Experience> experiences = experienceRepository.findActiveExperiences(loggedInUser.getCurrentLoggedInUser());
@@ -87,7 +87,7 @@ public class ExperienceServiceImpl implements ExperienceService {
 
     @Override
     @Cacheable(
-            value = REDIS_KEY_2,
+            value = EXPERIENCES,
             key = "#experienceId + '_' + @loggedInUser.getCurrentLoggedInUser()"
     )
     public ExperienceResponse getExperienceById(Long experienceId) {
@@ -107,11 +107,11 @@ public class ExperienceServiceImpl implements ExperienceService {
     @Override
     @Caching(
             put = @CachePut(
-                    value = REDIS_KEY_2,
+                    value = EXPERIENCES,
                     key = "#experienceId + '_' + @loggedInUser.getCurrentLoggedInUser()"
             ),
             evict = @CacheEvict(
-                    value = REDIS_KEY_1,
+                    value = ALL_EXPERIENCES,
                     key = "@loggedInUser.getCurrentLoggedInUser()"
             )
     )
@@ -158,11 +158,11 @@ public class ExperienceServiceImpl implements ExperienceService {
     @Caching(
             evict = {
                     @CacheEvict(
-                            value = REDIS_KEY_2,
+                            value = EXPERIENCES,
                             key = "#experienceId + '_' + @loggedInUser.getCurrentLoggedInUser()"
                     ),
                     @CacheEvict(
-                            value = REDIS_KEY_1,
+                            value = ALL_EXPERIENCES,
                             key = "@loggedInUser.getCurrentLoggedInUser()"
                     )
             }

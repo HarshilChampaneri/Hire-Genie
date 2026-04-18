@@ -22,6 +22,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.hire_genie.resume_builder.util.StaticConstants.ALL_EDUCATIONS;
+import static com.hire_genie.resume_builder.util.StaticConstants.EDUCATIONS;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,11 +34,8 @@ public class EducationServiceImpl implements EducationService {
     private final EducationMapper educationMapper;
     private final LoggedInUser loggedInUser;
 
-    private static final String REDIS_KEY_1 = "allEducations";
-    private static final String REDIS_KEY_2 = "educations";
-
     @Override
-    @CacheEvict(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CacheEvict(value = ALL_EDUCATIONS, key = "@loggedInUser.getCurrentLoggedInUser()")
     public List<EducationResponse> addEducations(EducationRequestList educationRequestList) {
 
         List<Education> educations = educationRequestList
@@ -65,7 +65,7 @@ public class EducationServiceImpl implements EducationService {
     }
 
     @Override
-    @Cacheable(value = REDIS_KEY_1, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @Cacheable(value = ALL_EDUCATIONS, key = "@loggedInUser.getCurrentLoggedInUser()")
     public EducationResponseList getAllEducations() throws Exception {
 
         List<Education> educations = educationRepository.findActiveEducations(loggedInUser.getCurrentLoggedInUser());
@@ -87,7 +87,7 @@ public class EducationServiceImpl implements EducationService {
 
     @Override
     @Cacheable(
-            value = REDIS_KEY_2,
+            value = EDUCATIONS,
             key = "#educationId + '_' + @loggedInUser.getCurrentLoggedInUser()"
     )
     public EducationResponse getEducationById(Long educationId) {
@@ -107,11 +107,11 @@ public class EducationServiceImpl implements EducationService {
     @Override
     @Caching(
             put = @CachePut(
-                    value = REDIS_KEY_2,
+                    value = EDUCATIONS,
                     key = "#educationId + '_' + @loggedInUser.getCurrentLoggedInUser()"
             ),
             evict = @CacheEvict(
-                    value = REDIS_KEY_1,
+                    value = ALL_EDUCATIONS,
                     key = "@loggedInUser.getCurrentLoggedInUser()"
             )
     )
@@ -164,11 +164,11 @@ public class EducationServiceImpl implements EducationService {
     @Caching(
             evict = {
                     @CacheEvict(
-                            value = REDIS_KEY_2,
+                            value = EDUCATIONS,
                             key = "#educationId + '_' + @loggedInUser.getCurrentLoggedInUser()"
                     ),
                     @CacheEvict(
-                            value = REDIS_KEY_1,
+                            value = ALL_EDUCATIONS,
                             key = "@loggedInUser.getCurrentLoggedInUser()"
                     )
             }

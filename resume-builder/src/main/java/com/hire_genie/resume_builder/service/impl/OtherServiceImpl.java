@@ -16,6 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.hire_genie.resume_builder.util.StaticConstants.OTHER;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -25,10 +27,8 @@ public class OtherServiceImpl implements OtherService {
     private final OtherMapper otherMapper;
     private final LoggedInUser loggedInUser;
 
-    private static final String REDIS_KEY = "other";
-
     @Override
-    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CachePut(value = OTHER, key = "@loggedInUser.getCurrentLoggedInUser()")
     public OtherResponse addOthers(OtherRequest otherRequest) {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -55,7 +55,7 @@ public class OtherServiceImpl implements OtherService {
     }
 
     @Override
-    @Cacheable(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @Cacheable(value = OTHER, key = "@loggedInUser.getCurrentLoggedInUser()")
     public OtherResponse getOther() throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -70,7 +70,7 @@ public class OtherServiceImpl implements OtherService {
     }
 
     @Override
-    @CachePut(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CachePut(value = OTHER, key = "@loggedInUser.getCurrentLoggedInUser()")
     public OtherResponse updateOther(OtherRequest otherRequest) throws Exception {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
@@ -90,7 +90,7 @@ public class OtherServiceImpl implements OtherService {
     }
 
     @Override
-    @CacheEvict(value = REDIS_KEY, key = "@loggedInUser.getCurrentLoggedInUser()")
+    @CacheEvict(value = OTHER, key = "@loggedInUser.getCurrentLoggedInUser()")
     public String deleteOther() {
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
