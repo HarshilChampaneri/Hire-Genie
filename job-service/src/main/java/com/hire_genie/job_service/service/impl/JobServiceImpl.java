@@ -6,10 +6,14 @@ import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
 import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
+import com.hire_genie.job_service.kafkaEvent.JobCandidateEvent;
+import com.hire_genie.job_service.mapper.JobCandidateMapper;
 import com.hire_genie.job_service.mapper.JobMapper;
 import com.hire_genie.job_service.model.Company;
 import com.hire_genie.job_service.model.Job;
+import com.hire_genie.job_service.model.JobCandidate;
 import com.hire_genie.job_service.repository.CompanyRepository;
+import com.hire_genie.job_service.repository.JobCandidateRepository;
 import com.hire_genie.job_service.repository.JobRepository;
 import com.hire_genie.job_service.security.util.LoggedInUser;
 import com.hire_genie.job_service.service.JobService;
@@ -40,6 +44,8 @@ public class JobServiceImpl implements JobService {
     private final JobMapper jobMapper;
     private final LoggedInUser loggedInUser;
     private final JobRecommendationServiceFeignClient jobRecommendationServiceFeignClient;
+    private final JobCandidateRepository jobCandidateRepository;
+    private final JobCandidateMapper jobCandidateMapper;
 
     @Override
     @Transactional
@@ -209,6 +215,30 @@ public class JobServiceImpl implements JobService {
         jobRepository.save(job);
 
         return "Job with jobId: " + jobId + " has been deleted successfully.";
+    }
+
+    @Override
+    public void applyForJob(Long jobId) {
+
+        jobRepository.findByJobIdIgnoringUserEmail(jobId).orElseThrow(
+                () -> new ResourceNotFoundException("Job", jobId)
+        );
+
+        String candidateEmail = loggedInUser.getCurrentLoggedInUser();
+
+        if (jobCandidateRepository.findByJobIdAndCandidateEmail(jobId, candidateEmail).isPresent()) {
+            throw new InvalidAccessException("You cannot apply for this Job Again!!");
+        }
+
+        JobCandidate jobCandidate = JobCandidate.builder()
+                .jobId(jobId)
+                .candidateEmail(candidateEmail)
+                .build();
+
+        JobCandidateEvent jobCandidateEvent = jobCandidateMapper.toJobCandidateEventFromJobCandidate(jobCandidateRepository.save(jobCandidate));
+
+        // TODO: Kafka Event send for Candidates Job Application!!
+
     }
 
     @Async

@@ -64,4 +64,12 @@ public class JobController {
         return ResponseEntity.ok(jobService.deleteJobById(jobId));
     }
 
+    @PostMapping("/apply/{jobId}")
+    public ResponseEntity<String> applyForJob(
+            @PathVariable Long jobId
+    ) {
+        jobService.applyForJob(jobId);
+        return ResponseEntity.ok("Application submitted successfully. You will receive an email shortly.");
+    }
+
 }

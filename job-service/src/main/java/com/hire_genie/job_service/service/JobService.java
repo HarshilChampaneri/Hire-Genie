@@ -17,4 +17,7 @@ public interface JobService {
     JobResponse updateJobByJobId(Long jobId, JobRequest jobRequest);
 
     String deleteJobById(Long jobId);
+
+    void applyForJob(Long jobId);
+
 }
