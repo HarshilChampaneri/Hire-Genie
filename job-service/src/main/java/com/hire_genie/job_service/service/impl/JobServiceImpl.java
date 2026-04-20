@@ -1,19 +1,21 @@
 package com.hire_genie.job_service.service.impl;
 
+import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
 import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
-import com.hire_genie.job_service.kafkaEvent.JobCandidateEvent;
-import com.hire_genie.job_service.mapper.JobCandidateMapper;
+import com.hire_genie.job_service.kafkaEvent.CandidateProfileEvent;
+import com.hire_genie.job_service.kafkaEvent.JobApplicationEvent;
+import com.hire_genie.job_service.mapper.JobApplicationMapper;
 import com.hire_genie.job_service.mapper.JobMapper;
 import com.hire_genie.job_service.model.Company;
 import com.hire_genie.job_service.model.Job;
-import com.hire_genie.job_service.model.JobCandidate;
+import com.hire_genie.job_service.model.JobApplication;
 import com.hire_genie.job_service.repository.CompanyRepository;
-import com.hire_genie.job_service.repository.JobCandidateRepository;
+import com.hire_genie.job_service.repository.JobApplicationRepository;
 import com.hire_genie.job_service.repository.JobRepository;
 import com.hire_genie.job_service.security.util.LoggedInUser;
 import com.hire_genie.job_service.service.JobService;
@@ -28,6 +30,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,8 +48,9 @@ public class JobServiceImpl implements JobService {
     private final JobMapper jobMapper;
     private final LoggedInUser loggedInUser;
     private final JobRecommendationServiceFeignClient jobRecommendationServiceFeignClient;
-    private final JobCandidateRepository jobCandidateRepository;
-    private final JobCandidateMapper jobCandidateMapper;
+    private final JobApplicationRepository jobApplicationRepository;
+    private final JobApplicationMapper jobApplicationMapper;
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
     @Override
     @Transactional
@@ -218,6 +223,7 @@ public class JobServiceImpl implements JobService {
     }
 
     @Override
+    @Transactional
     public void applyForJob(Long jobId) {
 
         jobRepository.findByJobIdIgnoringUserEmail(jobId).orElseThrow(
@@ -226,18 +232,29 @@ public class JobServiceImpl implements JobService {
 
         String candidateEmail = loggedInUser.getCurrentLoggedInUser();
 
-        if (jobCandidateRepository.findByJobIdAndCandidateEmail(jobId, candidateEmail).isPresent()) {
+        if (jobApplicationRepository.findByJobIdAndCandidateEmail(jobId, candidateEmail).isPresent()) {
             throw new InvalidAccessException("You cannot apply for this Job Again!!");
         }
 
-        JobCandidate jobCandidate = JobCandidate.builder()
+        JobApplication jobApplication = JobApplication.builder()
                 .jobId(jobId)
                 .candidateEmail(candidateEmail)
                 .build();
 
-        JobCandidateEvent jobCandidateEvent = jobCandidateMapper.toJobCandidateEventFromJobCandidate(jobCandidateRepository.save(jobCandidate));
+        JobApplicationEvent jobApplicationEvent = jobApplicationMapper.toJobApplicationEventFromJobApplication(jobApplicationRepository.save(jobApplication));
 
-        // TODO: Kafka Event send for Candidates Job Application!!
+        kafkaTemplate.send(JOB_APPLICATION_REQUESTS, candidateEmail, jobApplicationEvent);
+        log.info("Job application request sent for email: {}", candidateEmail);
+
+    }
+
+    @KafkaListener(topics = CANDIDATE_PROFILE_RESPONSES, groupId = JOB_SERVICE_GROUP)
+    public void consumeCandidateProfile(CandidateProfileEvent candidateProfileEvent) {
+        Job job = jobRepository.findByJobIdIgnoringUserEmail(candidateProfileEvent.jobId()).orElseThrow(
+                () -> new ResourceNotFoundException("Job", candidateProfileEvent.jobId())
+        );
+
+        sendCustomEmail(candidateProfileEvent.profile(), job);
 
     }
 
@@ -248,6 +265,16 @@ public class JobServiceImpl implements JobService {
         } catch (Exception e) {
             log.warn("Failed to push Job to Job Recommendation Engine: {}", e.getMessage());
         }
+    }
+
+    private void sendCustomEmail(ProfileResponse profileResponse, Job job) {
+        String message = String.format(
+                "Thank you %s, for applying to %s for the role of %s!",
+                profileResponse.fullName(),
+                job.getCompany().getCompanyName(),
+                job.getJobTitle()
+        );
+        log.info("Sending Email to {}: {}", profileResponse.email(), message);
     }
 
 }

@@ -1,6 +1,6 @@
 services:
   kafka:
-    container_name: my_kafka
+    container_name: hire_genie_kafka
     image: apache/kafka:latest
     ports:
       - "9092:9092"
@@ -37,7 +37,7 @@ services:
       - ./docker/kafka_data:/var/lib/kafka/data
 
   kafka-ui:
-    container_name: my_kafka_ui
+    container_name: hire_genie_kafka_ui
     image: ghcr.io/kafbat/kafka-ui:latest
     ports:
       - "8070:8080"

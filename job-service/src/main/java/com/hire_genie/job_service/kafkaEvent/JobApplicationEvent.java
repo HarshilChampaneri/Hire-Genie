@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 
 @Builder
-public record JobCandidateEvent(
+public record JobApplicationEvent(
 
         @NotNull(message = "JobID cannot be null")
         Long jobId,
