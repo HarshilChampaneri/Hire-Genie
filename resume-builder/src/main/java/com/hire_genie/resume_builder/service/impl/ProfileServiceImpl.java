@@ -2,6 +2,7 @@ package com.hire_genie.resume_builder.service.impl;
 
 import com.hire_genie.resume_builder.dto.profile.request.ProfileRequest;
 import com.hire_genie.resume_builder.dto.profile.response.ProfileResponse;
+import com.hire_genie.resume_builder.exception.ResourceNotFoundException;
 import com.hire_genie.resume_builder.mapper.ProfileMapper;
 import com.hire_genie.resume_builder.model.Profile;
 import com.hire_genie.resume_builder.repository.ProfileRepository;
@@ -13,6 +14,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.ResourceAccessException;
 
 import static com.hire_genie.resume_builder.util.StaticConstants.PROFILE;
 
@@ -107,6 +109,17 @@ public class ProfileServiceImpl implements ProfileService {
 
         return "Profile deleted successfully.";
 
+    }
+
+    @Override
+    public ProfileResponse getProfileByEmail(String email) throws Exception {
+
+        Profile profile = profileRepository.findExistingProfile(email);
+        if (profile == null) {
+            throw new Exception("Profile not found with email: " + email);
+        }
+
+        return profileMapper.toProfileResponseFromProfile(profile);
     }
 
 }

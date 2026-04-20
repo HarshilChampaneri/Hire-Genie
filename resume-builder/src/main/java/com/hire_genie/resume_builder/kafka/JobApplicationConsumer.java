@@ -22,15 +22,14 @@ public class JobApplicationConsumer {
 
     @KafkaListener(topics = JOB_APPLICATION_REQUESTS, groupId = CANDIDATE_SERVICE_GROUP)
     public void consumeApplicationRequest(JobApplicationEvent jobApplicationEvent) throws Exception {
-        log.info("Received application request for: {}", jobApplicationEvent.email());
+        log.info("Received application request for: {}", jobApplicationEvent.candidateEmail());
 
-        ProfileResponse profile = profileService.getYourProfile();
+        ProfileResponse profile = profileService.getProfileByEmail(jobApplicationEvent.candidateEmail());
 
         CandidateProfileEvent responseEvent = new CandidateProfileEvent(jobApplicationEvent.jobId(), profile);
         kafkaTemplate.send(CANDIDATE_PROFILE_RESPONSES, profile.email(), responseEvent);
 
-        log.info("Application request sent for: {}", jobApplicationEvent.email());
+        log.info("Application request sent for: {}", jobApplicationEvent.candidateEmail());
     }
 
 }
-

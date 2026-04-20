@@ -11,4 +11,7 @@ public interface ProfileService {
     ProfileResponse updateYourProfile(ProfileRequest profileRequest) throws Exception;
 
     String deleteYourProfile() throws Exception;
+
+    ProfileResponse getProfileByEmail(String email) throws Exception;
+
 }
