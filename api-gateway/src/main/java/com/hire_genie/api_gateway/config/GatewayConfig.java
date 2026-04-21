@@ -64,7 +64,11 @@ public class GatewayConfig {
     private ServerRequest addSecurityHeaders(ServerRequest request) {
         String path = request.uri().getPath();
 
-        if (path.contains("/auth/login") || path.contains("/auth/register")) {
+        if (path.contains("/auth/login") ||
+            path.contains("/auth/register") ||
+            path.contains("/v3/api-docs") ||
+            path.contains("/swagger-ui")) {
+
             return ServerRequest.from(request)
                     .header("X-Internal-Secret", internalSecret)
                     .build();

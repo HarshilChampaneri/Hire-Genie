@@ -31,6 +31,12 @@ public class SecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/security/auth/**").permitAll()
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/api/security/v3/api-docs/**" // Important for Gateway routing
+                        ).permitAll()
                         .requestMatchers("/api/security/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

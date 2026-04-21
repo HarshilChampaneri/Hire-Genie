@@ -27,7 +27,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private static final List<String> PUBLIC_PATHS = List.of(
             "/api/security/auth/login",
-            "/api/security/auth/register"
+            "/api/security/auth/register",
+            "/swagger-ui",
+            "/v3/api-docs",
+            "/swagger-resources"
     );
 
     @Override
@@ -36,8 +39,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String path = request.getRequestURI();
 
+        boolean isPublicPath = PUBLIC_PATHS.stream().anyMatch(path::contains);
+
         // Check for public paths
-        if (path.contains("/auth/login") || path.contains("/auth/register")) {
+        if (isPublicPath) {
             filterChain.doFilter(request, response);
             return;
         }
