@@ -48,3 +48,12 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
       DYNAMIC_CONFIG_ENABLES: 'true'
     restart: unless-stopped
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: hire_genie_zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    restart: unless-stopped
