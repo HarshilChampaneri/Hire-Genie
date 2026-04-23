@@ -1,8 +1,6 @@
 package com.hire_genie.security_service.service;
 
-import com.hire_genie.security_service.dto.AuthRequest;
-import com.hire_genie.security_service.dto.AuthResponse;
-import com.hire_genie.security_service.dto.RegisterRequest;
+import com.hire_genie.security_service.dto.*;
 import com.hire_genie.security_service.entity.User;
 import com.hire_genie.security_service.enums.Role;
 import com.hire_genie.security_service.exception.UnauthorizedAdminException;
@@ -25,6 +23,9 @@ public class AuthenticationService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
+    private final TokenBlacklistService tokenBlacklistService;
+    private final OtpService otpService;
+    private final EmailService emailService;
 
     @Value("${app.security.admin-secret}")
     private String internalAdminSecret;
@@ -58,7 +59,7 @@ public class AuthenticationService {
                 .build();
     }
 
-    public AuthResponse authenticate(AuthRequest request) {
+    public MessageResponse authenticate(AuthRequest request) {
 
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -67,8 +68,24 @@ public class AuthenticationService {
                 )
         );
 
+        String otp = otpService.generateAndStoreOtp(request.email());
+        emailService.sendOtpEmail(request.email(), otp);
+
+        return MessageResponse.builder()
+                .message("OTP sent to your registered email address. Please verify to complete login.")
+                .build();
+    }
+
+    public AuthResponse verifyOtp(OtpVerificationRequest request) {
+
+        if (!otpService.verifyOtp(request.email(), request.otp())) {
+            throw new IllegalArgumentException("Invalid or expired OTP. Please try again.");
+        }
+
         var user = userRepository.findByEmail(request.email())
-                .orElseThrow(() -> new UsernameNotFoundException("User with email: " + request.email() + " is not found."));
+                .orElseThrow(() -> new UsernameNotFoundException(
+                        "User with email: " + request.email() + " is not found."
+                ));
 
         var userDetails = new CustomUserDetails(user);
         var jwtToken = jwtService.generateToken(userDetails);
@@ -76,5 +93,17 @@ public class AuthenticationService {
         return AuthResponse.builder()
                 .token(jwtToken)
                 .build();
+    }
+
+    public void logout(String authHeader) {
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            throw new IllegalArgumentException("Missing of malformed Authorization header.");
+        }
+
+        String token = authHeader.substring(7);
+        Long expiryMillis = jwtService.extractExpiration(token).getTime();
+        tokenBlacklistService.blacklist(token, expiryMillis);
+
     }
 }

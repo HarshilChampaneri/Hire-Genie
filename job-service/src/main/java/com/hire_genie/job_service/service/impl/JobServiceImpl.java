@@ -18,6 +18,7 @@ import com.hire_genie.job_service.repository.CompanyRepository;
 import com.hire_genie.job_service.repository.JobApplicationRepository;
 import com.hire_genie.job_service.repository.JobRepository;
 import com.hire_genie.job_service.security.util.LoggedInUser;
+import com.hire_genie.job_service.service.EmailService;
 import com.hire_genie.job_service.service.JobService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -51,6 +53,7 @@ public class JobServiceImpl implements JobService {
     private final JobApplicationRepository jobApplicationRepository;
     private final JobApplicationMapper jobApplicationMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -268,13 +271,10 @@ public class JobServiceImpl implements JobService {
     }
 
     private void sendCustomEmail(ProfileResponse profileResponse, Job job) {
-        String message = String.format(
-                "Thank you %s, for applying to %s for the role of %s!",
-                profileResponse.fullName(),
-                job.getCompany().getCompanyName(),
-                job.getJobTitle()
-        );
-        log.info("Sending Email to {}: {}", profileResponse.email(), message);
+        log.info("Triggering application confirmation email → {}", profileResponse.email());
+        emailService.sendJobApplicationToEmail(profileResponse, job);
     }
+
+
 
 }

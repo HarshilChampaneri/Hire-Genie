@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Application Received</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,700;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+</head>
+
+<body style="margin:0; padding:0; background-color:#0d0d0d; font-family:'DM Sans', sans-serif;">
+
+<!-- Preheader (hidden preview text in inbox) -->
+<span style="display:none; max-height:0; overflow:hidden; mso-hide:all;">
+    Your application for {{JOB_TITLE}} at {{COMPANY_NAME}} has been received ✦
+  </span>
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0d0d0d; padding: 40px 20px;">
+    <tr>
+        <td align="center">
+
+            <!-- Card Container -->
+            <table width="600" cellpadding="0" cellspacing="0" border="0"
+                   style="max-width:600px; width:100%; border-radius:20px; overflow:hidden;
+                      background-color:#111111; border: 1px solid #2a2a2a;">
+
+                <!-- ── HEADER BANNER ── -->
+                <tr>
+                    <td style="background: linear-gradient(135deg, #1a1a2e 0%, #16213e 40%, #0f3460 100%);
+                        padding: 50px 50px 40px; text-align:center; position:relative;">
+
+                        <!-- Top accent line -->
+                        <div style="height:3px; background: linear-gradient(90deg, transparent, #e8b86d, #f0c987, #e8b86d, transparent);
+                           border-radius:2px; margin-bottom: 36px;"></div>
+
+                        <!-- Logo / Brand mark -->
+                        <div style="display:inline-block; width:58px; height:58px; border-radius:50%;
+                           background: linear-gradient(135deg, #e8b86d, #c9973a);
+                           line-height:58px; text-align:center; margin-bottom:22px;
+                           box-shadow: 0 0 30px rgba(232,184,109,0.35);">
+                            <span style="font-size:26px; color:#0d0d0d; font-weight:700;">✦</span>
+                        </div>
+
+                        <p style="margin:0 0 10px; font-family:'DM Sans', sans-serif; font-size:11px;
+                          font-weight:500; letter-spacing:4px; text-transform:uppercase;
+                          color:#e8b86d;">Application Confirmed</p>
+
+                        <h1 style="margin:0; font-family:'Fraunces', Georgia, serif; font-size:38px;
+                           font-weight:300; color:#f5f0e8; line-height:1.2; letter-spacing:-0.5px;">
+                            You're in the <em style="font-style:italic; color:#e8b86d;">running</em>
+                        </h1>
+
+                    </td>
+                </tr>
+
+                <!-- ── GREETING SECTION ── -->
+                <tr>
+                    <td style="padding: 44px 50px 0;">
+                        <p style="margin:0 0 6px; font-size:12px; letter-spacing:3px; text-transform:uppercase;
+                          color:#666; font-weight:500;">Hello,</p>
+                        <h2 style="margin:0 0 20px; font-family:'Fraunces', Georgia, serif; font-size:30px;
+                           font-weight:600; color:#f5f0e8; letter-spacing:-0.3px;">
+                            {{FULL_NAME}}
+                        </h2>
+                        <p style="margin:0; font-size:16px; line-height:1.75; color:#a0a0a0; font-weight:300;">
+                            We've successfully received your application. Our hiring team is reviewing
+                            your profile and we'll be in touch soon. Here's a summary of what you applied for:
+                        </p>
+                    </td>
+                </tr>
+
+                <!-- ── JOB DETAILS CARD ── -->
+                <tr>
+                    <td style="padding: 32px 50px 0;">
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                               style="background: linear-gradient(135deg, #1c1c1c, #181818);
+                             border-radius:14px; border: 1px solid #2e2e2e; overflow:hidden;">
+                            <tr>
+                                <!-- Gold left accent bar -->
+                                <td width="4" style="background: linear-gradient(180deg, #e8b86d, #c9973a); border-radius:14px 0 0 14px;"></td>
+                                <td style="padding: 28px 28px 28px 24px;">
+
+                                    <!-- Role -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
+                                        <tr>
+                                            <td>
+                                                <p style="margin:0 0 4px; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#666;">Position Applied</p>
+                                                <p style="margin:0; font-family:'Fraunces', Georgia, serif; font-size:22px;
+                                      font-weight:600; color:#f5f0e8; letter-spacing:-0.2px;">{{JOB_TITLE}}</p>
+                                            </td>
+                                            <td width="44" align="right" valign="top">
+                                                <div style="width:44px; height:44px; border-radius:10px;
+                                       background:rgba(232,184,109,0.1); border:1px solid rgba(232,184,109,0.2);
+                                       text-align:center; line-height:44px; font-size:20px;">💼</div>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Divider -->
+                                    <div style="height:1px; background:linear-gradient(90deg, #2e2e2e, transparent); margin-bottom:20px;"></div>
+
+                                    <!-- Company -->
+                                    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                        <tr>
+                                            <td width="50%">
+                                                <p style="margin:0 0 3px; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#555;">Company</p>
+                                                <p style="margin:0; font-size:15px; color:#d4d4d4; font-weight:500;">{{COMPANY_NAME}}</p>
+                                            </td>
+                                            <td width="50%">
+                                                <p style="margin:0 0 3px; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:#555;">Submitted On</p>
+                                                <p style="margin:0; font-size:15px; color:#d4d4d4; font-weight:500;">{{APPLIED_DATE}}</p>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- ── PROCESS TIMELINE ── -->
+                <tr>
+                    <td style="padding: 38px 50px 0;">
+                        <p style="margin:0 0 22px; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:#666; font-weight:500;">
+                            What happens next
+                        </p>
+
+                        <!-- Step 1 -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
+                            <tr>
+                                <td width="36" valign="top" style="padding-top:2px;">
+                                    <div style="width:32px; height:32px; border-radius:50%;
+                                 background:linear-gradient(135deg,#e8b86d,#c9973a);
+                                 text-align:center; line-height:32px;
+                                 font-size:13px; font-weight:600; color:#0d0d0d;">1</div>
+                                </td>
+                                <td style="padding-left:14px; padding-bottom:18px;
+                               border-left:1px dashed #2e2e2e; margin-left:16px;">
+                                    <!-- hack: use padding to indent content from the dashed line -->
+                                    <p style="margin:0 0 2px; font-size:14px; font-weight:500; color:#f0f0f0;">Application Review</p>
+                                    <p style="margin:0; font-size:13px; color:#666; line-height:1.6;">Our team carefully reviews every application within 3–5 business days.</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 2 -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6px;">
+                            <tr>
+                                <td width="36" valign="top" style="padding-top:2px;">
+                                    <div style="width:32px; height:32px; border-radius:50%;
+                                 background:#1e1e1e; border:1px solid #333;
+                                 text-align:center; line-height:32px;
+                                 font-size:13px; font-weight:500; color:#666;">2</div>
+                                </td>
+                                <td style="padding-left:14px; padding-bottom:18px;">
+                                    <p style="margin:0 0 2px; font-size:14px; font-weight:500; color:#888;">Initial Screening Call</p>
+                                    <p style="margin:0; font-size:13px; color:#555; line-height:1.6;">A quick 20-minute call to learn more about you and your goals.</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <!-- Step 3 -->
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td width="36" valign="top" style="padding-top:2px;">
+                                    <div style="width:32px; height:32px; border-radius:50%;
+                                 background:#1e1e1e; border:1px solid #333;
+                                 text-align:center; line-height:32px;
+                                 font-size:13px; font-weight:500; color:#666;">3</div>
+                                </td>
+                                <td style="padding-left:14px;">
+                                    <p style="margin:0 0 2px; font-size:14px; font-weight:500; color:#888;">Final Interview</p>
+                                    <p style="margin:0; font-size:13px; color:#555; line-height:1.6;">Meet the team and showcase your skills in depth.</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- ── CTA BUTTON ── -->
+                <tr>
+                    <td style="padding: 38px 50px 0; text-align:center;">
+                        <table cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+                            <tr>
+                                <td style="border-radius:10px; background:linear-gradient(135deg,#e8b86d,#c9973a);
+                               box-shadow: 0 8px 24px rgba(232,184,109,0.25);">
+                                    <a href="#" style="display:inline-block; padding:14px 38px;
+                                        font-family:'DM Sans', sans-serif; font-size:14px;
+                                        font-weight:600; letter-spacing:0.5px;
+                                        color:#0d0d0d; text-decoration:none;">
+                                        View Your Application →
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- ── CLOSING MESSAGE ── -->
+                <tr>
+                    <td style="padding: 40px 50px 0;">
+                        <div style="background:#161616; border-radius:12px; padding:24px 28px;
+                           border:1px solid #222;">
+                            <p style="margin:0; font-size:14px; line-height:1.8; color:#777; font-style:italic; text-align:center;">
+                                "Every great career starts with a bold application.
+                                <br/>Wishing you the very best, {{FIRST_NAME}}."
+                            </p>
+                        </div>
+                    </td>
+                </tr>
+
+                <!-- ── FOOTER ── -->
+                <tr>
+                    <td style="padding: 36px 50px 40px;">
+                        <!-- Divider -->
+                        <div style="height:1px; background:linear-gradient(90deg, transparent, #2a2a2a, transparent); margin-bottom:28px;"></div>
+
+                        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                                <td>
+                                    <p style="margin:0 0 4px; font-family:'Fraunces', Georgia, serif; font-size:16px; font-weight:600; color:#e8b86d;">
+                                        TalentBridge
+                                    </p>
+                                    <p style="margin:0; font-size:12px; color:#444;">
+                                        Connecting talent with opportunity
+                                    </p>
+                                </td>
+                                <td align="right" valign="top">
+                                    <p style="margin:0; font-size:11px; color:#3a3a3a; text-align:right; line-height:1.8;">
+                                        This is an automated email.<br/>
+                                        Please do not reply directly.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="margin:18px 0 0; font-size:11px; color:#333; text-align:center; line-height:1.8;">
+                            © 2025 TalentBridge · <a href="#" style="color:#555; text-decoration:none;">Privacy Policy</a>
+                            · <a href="#" style="color:#555; text-decoration:none;">Unsubscribe</a>
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+            <!-- /Card Container -->
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

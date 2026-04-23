@@ -1,16 +1,11 @@
 package com.hire_genie.security_service.controller;
 
-import com.hire_genie.security_service.dto.AuthRequest;
-import com.hire_genie.security_service.dto.AuthResponse;
-import com.hire_genie.security_service.dto.RegisterRequest;
+import com.hire_genie.security_service.dto.*;
 import com.hire_genie.security_service.service.AuthenticationService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/security/auth")
@@ -25,7 +20,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> authenticate(@Valid @RequestBody AuthRequest request) {
+    public ResponseEntity<MessageResponse> authenticate(@Valid @RequestBody AuthRequest request) {
         return ResponseEntity.ok(service.authenticate(request));
     }
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<AuthResponse> verifyOtp(@Valid @RequestBody OtpVerificationRequest request) {
+        return ResponseEntity.ok(service.verifyOtp(request));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(@RequestHeader("Authorization") String authHeader) {
+        service.logout(authHeader);
+        return ResponseEntity.noContent().build();
+    }
+
 }
