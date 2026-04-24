@@ -26,10 +26,10 @@ public class Profile {
     @Column(nullable = false)
     private String profession;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String email;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String mobileNo;
 
     @Column(nullable = false)
