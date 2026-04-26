@@ -1,15 +1,113 @@
+version: "3.8"
+
 services:
-  kafka:
-    container_name: hire_genie_kafka
+
+#  Tools and Architecture Docker Services:-
+
+#  ZIPKIN:-
+  hire-genie-zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: hire-genie-zipkin
+    ports:
+      - "9411:9411"
+    environment:
+      - STORAGE_TYPE=mem
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+#  MONGODB-SECURITY-SERVICE:-
+  security-service-mongo:
+    image: mongo:latest
+    container_name: security-service-mongo
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=user
+      - MONGO_INITDB_ROOT_PASSWORD=pass
+      - MONGO_INITDB_DATABASE=security_db
+    volumes:
+      - security-service-data:/data/db
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+#  POSTGRESQL-RESUME-BUILDER:-
+  resume-builder-pg:
+    image: postgres:latest
+    container_name: resume-builder-pg
+    ports:
+      - "5421:5432"
+    environment:
+      - POSTGRES_DB=resume_builder_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    networks:
+      hire-genie-network:
+    volumes:
+      - resume-builder-data:/var/lib/postgresql
+    restart: unless-stopped
+
+#  POSTGRESQL-JOB-SERVICE:-
+  job-service-pg:
+    image: postgres:latest
+    container_name: job-service-pg
+    ports:
+      - "5422:5432"
+    environment:
+      - POSTGRES_DB=job_service_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    networks:
+      hire-genie-network:
+    volumes:
+      - job-service-data:/var/lib/postgresql
+    restart: unless-stopped
+
+#  PGVECTOR-JOB-RECOMMENDATION-ENGINE:-
+  job-recommendation-engine-pg:
+    image: pgvector/pgvector:pg18
+    container_name: job-recommendation-engine-pg
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=job_recommendation_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    networks:
+      hire-genie-network:
+    volumes:
+      - job-recommendation-engine-data:/var/lib/postgresql
+    restart: unless-stopped
+
+#  PGVECTOR-EMPLOYEE-RECOMMENDATION-ENGINE:-
+  employee-recommendation-engine-pg:
+    image: pgvector/pgvector:pg18
+    container_name: employee-recommendation-engine-pg
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=employee_recommendation_db
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=pass
+    networks:
+      hire-genie-network:
+    volumes:
+      - employee-recommendation-engine-data:/var/lib/postgresql
+    restart: unless-stopped
+
+#  KAFKA:-
+  hire-genie-kafka:
     image: apache/kafka:latest
+    container_name: hire-genie-kafka
     ports:
       - "9092:9092"
       - "9094:9094"
     environment:
       KAFKA_NODE_ID: 1
-      KAFKA_CLUSTER_ID: 'hire-genie'
-      KAFKA_PROCESS_ROLES: 'broker, controller'
-      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:9093'
+      KAFKA_CLUSTER_ID: 'hire-genie-cluster-id'
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@hire-genie-kafka:9093'
       KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
 
       KAFKA_LISTENERS: >
@@ -18,7 +116,7 @@ services:
         CONTROLLER://0.0.0.0:9093
 
       KAFKA_ADVERTISED_LISTENERS: >
-        PLAINTEXT://kafka:9092,
+        PLAINTEXT://hire-genie-kafka:9092,
         EXTERNAL://localhost:9094
 
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: >
@@ -33,27 +131,155 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_NUM_PARTITIONS: 1
+    networks:
+      hire-genie-network:
     volumes:
       - ./docker/kafka_data:/var/lib/kafka/data
+    restart: unless-stopped
 
-  kafka-ui:
-    container_name: hire_genie_kafka_ui
+#  KAFKA_UI:-
+  hire-genie-kafka-ui:
+    container_name: hire-genie-kafka-ui
     image: ghcr.io/kafbat/kafka-ui:latest
     ports:
       - "8070:8080"
     depends_on:
-      - kafka
+      - hire-genie-kafka
     environment:
       KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      DYNAMIC_CONFIG_ENABLES: 'true'
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: hire-genie-kafka:9092
+      DYNAMIC_CONFIG_ENABLED: 'true'
+    networks:
+      hire-genie-network:
     restart: unless-stopped
 
-  zipkin:
-    image: openzipkin/zipkin:latest
-    container_name: hire_genie_zipkin
+#  REDIS:-
+  hire-genie-redis:
+    container_name: hire-genie-redis
+    image: redis:latest
     ports:
-      - "9411:9411"
-    environment:
-      - STORAGE_TYPE=mem
+      - "6379:6379"
+    command: redis-server --requirepass pass --appendonly yes
+    volumes:
+      - hire-genie-redis-data:/data
+    networks:
+      hire-genie-network:
     restart: unless-stopped
+
+#  Spring Boot Application Docker Services:-
+
+  eureka-discovery-server:
+    container_name: eureka-discovery-server
+    image: hire-genie/eureka-discovery-server:latest
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  config-server:
+    container_name: config-server
+    image: hire-genie/config-server:latest
+    environment:
+      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN}
+    depends_on:
+      - eureka-discovery-server
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  security-service:
+    container_name: security-service
+    image: hire-genie/security-service:latest
+    depends_on:
+      - security-service-mongo
+      - hire-genie-redis
+      - hire-genie-zipkin
+      - config-server
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  resume-builder:
+    container_name: resume-builder
+    image: hire-genie/resume-builder:latest
+    depends_on:
+      - config-server
+      - hire-genie-zipkin
+      - resume-builder-pg
+      - hire-genie-redis
+      - hire-genie-kafka
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  job-service:
+    container_name: job-service
+    image: hire-genie/job-service:latest
+    depends_on:
+      - hire-genie-zipkin
+      - config-server
+      - job-service-pg
+      - hire-genie-kafka
+      - hire-genie-redis
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  job-recommendation-engine:
+    container_name: job-recommendation-engine
+    image: hire-genie/job-recommendation-engine:latest
+    depends_on:
+      - hire-genie-zipkin
+      - config-server
+      - job-recommendation-engine-pg
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  employee-recommendation-engine:
+    container_name: employee-recommendation-engine
+    image: hire-genie/employee-recommendation-engine:latest
+    depends_on:
+      - hire-genie-zipkin
+      - config-server
+      - employee-recommendation-engine-pg
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  roleplay-service:
+    container_name: roleplay-service
+    image: hire-genie/roleplay-service:latest
+    depends_on:
+      - hire-genie-zipkin
+      - config-server
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+  api-gateway:
+    container_name: api-gateway
+    image: hire-genie/api-gateway:latest
+    depends_on:
+      - security-service
+      - resume-builder
+      - job-service
+      - job-recommendation-engine
+      - employee-recommendation-engine
+      - roleplay-service
+    ports:
+      - "8080:8080"
+    networks:
+      hire-genie-network:
+    restart: unless-stopped
+
+volumes:
+  resume-builder-data:
+  job-service-data:
+  job-recommendation-engine-data:
+  employee-recommendation-engine-data:
+  hire-genie-redis-data:
+  security-service-data:
+
+networks:
+  hire-genie-network:
+
