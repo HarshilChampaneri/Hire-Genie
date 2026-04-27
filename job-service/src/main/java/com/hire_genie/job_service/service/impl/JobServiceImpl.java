@@ -229,13 +229,13 @@ public class JobServiceImpl implements JobService {
     @Transactional
     public void applyForJob(Long jobId) {
 
-        jobRepository.findByJobIdIgnoringUserEmail(jobId).orElseThrow(
+        Job job = jobRepository.findByJobIdIgnoringUserEmail(jobId).orElseThrow(
                 () -> new ResourceNotFoundException("Job", jobId)
         );
 
         String candidateEmail = loggedInUser.getCurrentLoggedInUser();
 
-        if (jobApplicationRepository.findByJobIdAndCandidateEmail(jobId, candidateEmail).isPresent()) {
+        if (jobApplicationRepository.findByJobIdAndCandidateEmail(jobId, candidateEmail).isPresent() || job.getUserEmail().equals(candidateEmail)) {
             throw new InvalidAccessException("You cannot apply for this Job Again!!");
         }
 

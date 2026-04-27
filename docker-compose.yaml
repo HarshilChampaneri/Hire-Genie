@@ -171,6 +171,8 @@ services:
   eureka-discovery-server:
     container_name: eureka-discovery-server
     image: hire-genie/eureka-discovery-server:latest
+    ports:
+      - "8761:8761"
     networks:
       hire-genie-network:
     restart: unless-stopped

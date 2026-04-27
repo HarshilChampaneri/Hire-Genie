@@ -86,7 +86,8 @@ public class RedisConfig {
                 .configure(JsonReadFeature.ALLOW_SINGLE_QUOTES, true)
                 .configure(JsonWriteFeature.ESCAPE_NON_ASCII, true)
                 .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .addModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
                 .build();
     }
 
