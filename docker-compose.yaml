@@ -284,4 +284,3 @@ volumes:
 
 networks:
   hire-genie-network:
-
