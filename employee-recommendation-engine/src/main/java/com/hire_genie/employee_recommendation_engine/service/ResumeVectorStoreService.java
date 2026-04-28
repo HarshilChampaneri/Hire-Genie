@@ -6,6 +6,7 @@ import com.hire_genie.employee_recommendation_engine.util.ResumeTextConvertor;
 import com.hire_genie.employee_recommendation_engine.vectorMappings.EmailVectorMapping;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -39,13 +41,7 @@ public class ResumeVectorStoreService {
         });
 
         String resumeText = resumeTextConvertor.convert(resumeRequest);
-        Map<String, Object> metaData = Map.of(
-                "email", email,
-                "fullName", resumeRequest.profile().fullName(),
-                "profession", resumeRequest.profile().profession() != null ? resumeRequest.profile().profession() : ""
-        );
-
-        Document document = new Document(resumeText, metaData);
+        Document document = getDocument(resumeRequest, email, resumeText);
         vectorStore.add(List.of(document));
 
         mappingRepository.save(
@@ -57,6 +53,19 @@ public class ResumeVectorStoreService {
 
         log.info("Upserted resume vector for email: {}", email);
 
+    }
+
+    private static @NonNull Document getDocument(ResumeRequest resumeRequest, String email, String resumeText) {
+        Map<String, Object> metaData = Map.of(
+                "profileId", resumeRequest.profile().profileId(),
+                "fullName", resumeRequest.profile().fullName(),
+                "profession", resumeRequest.profile().profession() != null ? resumeRequest.profile().profession() : "",
+                "email", email,
+                "mobileNo", resumeRequest.profile().mobileNo() != null ? resumeRequest.profile().mobileNo() : "",
+                "urls", resumeRequest.profile().urls()
+        );
+
+        return new Document(resumeText, metaData);
     }
 
 }

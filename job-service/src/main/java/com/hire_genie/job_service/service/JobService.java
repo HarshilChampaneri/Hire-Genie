@@ -1,10 +1,13 @@
 package com.hire_genie.job_service.service;
 
+import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 public interface JobService {
     @Transactional
@@ -19,5 +22,7 @@ public interface JobService {
     String deleteJobById(Long jobId);
 
     void applyForJob(Long jobId);
+
+    List<ProfileResponse> fetchJobDescriptionAndRecommendEmployees(Long jobId);
 
 }

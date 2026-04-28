@@ -27,17 +27,11 @@ public class JobRecommendationService {
     private final UserProfileFeignClient userProfileFeignClient;
     private final VectorStore vectorStore;
 
-    public List<JobResponse> recommendJobs(HttpServletRequest request) {
-
-        String secret = request.getHeader("X-Internal-Secret");
-        String email = request.getHeader("X-User-Email");
-        String roles = request.getHeader("X-User-Roles");
+    public List<JobResponse> recommendJobs(ResumeRequest userProfile) {
 
         if (!loggedInUser.isEmployee()) {
             throw new InvalidAccessException("You are Unauthorized to access this Service");
         }
-
-        ResumeRequest userProfile = userProfileFeignClient.fetchUserProfile(secret, email, roles);
 
         String profile = userProfileToString(userProfile);
 

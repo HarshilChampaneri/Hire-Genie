@@ -6,6 +6,7 @@ import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
+import com.hire_genie.job_service.feignClient.EmployeeRecommendationServiceFeignClient;
 import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
 import com.hire_genie.job_service.kafkaEvent.CandidateProfileEvent;
 import com.hire_genie.job_service.kafkaEvent.JobApplicationEvent;
@@ -38,6 +39,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static com.hire_genie.job_service.util.StaticConstants.*;
 
 @Slf4j
@@ -54,6 +57,7 @@ public class JobServiceImpl implements JobService {
     private final JobApplicationMapper jobApplicationMapper;
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final EmailService emailService;
+    private final EmployeeRecommendationServiceFeignClient employeeRecommendationServiceFeignClient;
 
     @Override
     @Transactional
@@ -248,6 +252,21 @@ public class JobServiceImpl implements JobService {
 
         kafkaTemplate.send(JOB_APPLICATION_REQUESTS, candidateEmail, jobApplicationEvent);
         log.info("Job application request sent for email: {}", candidateEmail);
+
+    }
+
+    @Override
+    public List<ProfileResponse> fetchJobDescriptionAndRecommendEmployees(Long jobId) {
+
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
+
+        Job job = jobRepository.findByJobId(jobId, userEmail).orElseThrow(
+                () -> new ResourceNotFoundException("Job", jobId)
+        );
+
+        String jobDescription = job.getJobDescription();
+
+        return employeeRecommendationServiceFeignClient.recommendEmployees(jobDescription);
 
     }
 

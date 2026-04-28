@@ -1,8 +1,11 @@
 package com.hire_genie.job_service.controller;
 
+import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
+import com.hire_genie.job_service.feignClient.EmployeeRecommendationServiceFeignClient;
+import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
 import com.hire_genie.job_service.service.JobService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -70,6 +73,11 @@ public class JobController {
     ) {
         jobService.applyForJob(jobId);
         return ResponseEntity.ok("Application submitted successfully. You will receive an email shortly.");
+    }
+
+    @PostMapping("/recommend/employees/{jobId}")
+    public ResponseEntity<List<ProfileResponse>> recommendEmployees(@PathVariable Long jobId) {
+        return ResponseEntity.ok(jobService.fetchJobDescriptionAndRecommendEmployees(jobId));
     }
 
 }

@@ -2,9 +2,9 @@ version: "3.8"
 
 services:
 
-#  Tools and Architecture Docker Services:-
+  #  Tools and Architecture Docker Services:-
 
-#  ZIPKIN:-
+  #  ZIPKIN:-
   hire-genie-zipkin:
     image: openzipkin/zipkin:latest
     container_name: hire-genie-zipkin
@@ -15,8 +15,14 @@ services:
     networks:
       hire-genie-network:
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9411/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
-#  MONGODB-SECURITY-SERVICE:-
+  #  MONGODB-SECURITY-SERVICE:-
   security-service-mongo:
     image: mongo:latest
     container_name: security-service-mongo
@@ -31,8 +37,14 @@ services:
     networks:
       hire-genie-network:
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "-u", "user", "-p", "pass", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
-#  POSTGRESQL-RESUME-BUILDER:-
+  #  POSTGRESQL-RESUME-BUILDER:-
   resume-builder-pg:
     image: postgres:latest
     container_name: resume-builder-pg
@@ -47,8 +59,14 @@ services:
     volumes:
       - resume-builder-data:/var/lib/postgresql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user", "-d", "resume_builder_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
-#  POSTGRESQL-JOB-SERVICE:-
+  #  POSTGRESQL-JOB-SERVICE:-
   job-service-pg:
     image: postgres:latest
     container_name: job-service-pg
@@ -63,8 +81,14 @@ services:
     volumes:
       - job-service-data:/var/lib/postgresql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user", "-d", "job_service_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
-#  PGVECTOR-JOB-RECOMMENDATION-ENGINE:-
+  #  PGVECTOR-JOB-RECOMMENDATION-ENGINE:-
   job-recommendation-engine-pg:
     image: pgvector/pgvector:pg18
     container_name: job-recommendation-engine-pg
@@ -79,8 +103,14 @@ services:
     volumes:
       - job-recommendation-engine-data:/var/lib/postgresql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user", "-d", "job_recommendation_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
-#  PGVECTOR-EMPLOYEE-RECOMMENDATION-ENGINE:-
+  #  PGVECTOR-EMPLOYEE-RECOMMENDATION-ENGINE:-
   employee-recommendation-engine-pg:
     image: pgvector/pgvector:pg18
     container_name: employee-recommendation-engine-pg
@@ -95,8 +125,14 @@ services:
     volumes:
       - employee-recommendation-engine-data:/var/lib/postgresql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user", "-d", "employee_recommendation_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
-#  KAFKA:-
+  #  KAFKA:-
   hire-genie-kafka:
     image: apache/kafka:latest
     container_name: hire-genie-kafka
@@ -136,15 +172,22 @@ services:
     volumes:
       - ./docker/kafka_data:/var/lib/kafka/data
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/opt/kafka/bin/kafka-broker-api-versions.sh", "--bootstrap-server", "localhost:9092"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
-#  KAFKA_UI:-
+  #  KAFKA_UI:-
   hire-genie-kafka-ui:
     container_name: hire-genie-kafka-ui
     image: ghcr.io/kafbat/kafka-ui:latest
     ports:
       - "8070:8080"
     depends_on:
-      - hire-genie-kafka
+      hire-genie-kafka:
+        condition: service_healthy
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: hire-genie-kafka:9092
@@ -153,7 +196,7 @@ services:
       hire-genie-network:
     restart: unless-stopped
 
-#  REDIS:-
+  #  REDIS:-
   hire-genie-redis:
     container_name: hire-genie-redis
     image: redis:latest
@@ -165,114 +208,209 @@ services:
     networks:
       hire-genie-network:
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "pass", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
-#  Spring Boot Application Docker Services:-
+  #  Spring Boot Application Docker Services:-
 
-  eureka-discovery-server:
-    container_name: eureka-discovery-server
-    image: hire-genie/eureka-discovery-server:latest
-    ports:
-      - "8761:8761"
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  config-server:
-    container_name: config-server
-    image: hire-genie/config-server:latest
-    environment:
-      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN}
-    depends_on:
-      - eureka-discovery-server
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  security-service:
-    container_name: security-service
-    image: hire-genie/security-service:latest
-    depends_on:
-      - security-service-mongo
-      - hire-genie-redis
-      - hire-genie-zipkin
-      - config-server
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  resume-builder:
-    container_name: resume-builder
-    image: hire-genie/resume-builder:latest
-    depends_on:
-      - config-server
-      - hire-genie-zipkin
-      - resume-builder-pg
-      - hire-genie-redis
-      - hire-genie-kafka
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  job-service:
-    container_name: job-service
-    image: hire-genie/job-service:latest
-    depends_on:
-      - hire-genie-zipkin
-      - config-server
-      - job-service-pg
-      - hire-genie-kafka
-      - hire-genie-redis
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  job-recommendation-engine:
-    container_name: job-recommendation-engine
-    image: hire-genie/job-recommendation-engine:latest
-    depends_on:
-      - hire-genie-zipkin
-      - config-server
-      - job-recommendation-engine-pg
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  employee-recommendation-engine:
-    container_name: employee-recommendation-engine
-    image: hire-genie/employee-recommendation-engine:latest
-    depends_on:
-      - hire-genie-zipkin
-      - config-server
-      - employee-recommendation-engine-pg
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  roleplay-service:
-    container_name: roleplay-service
-    image: hire-genie/roleplay-service:latest
-    depends_on:
-      - hire-genie-zipkin
-      - config-server
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
-
-  api-gateway:
-    container_name: api-gateway
-    image: hire-genie/api-gateway:latest
-    depends_on:
-      - security-service
-      - resume-builder
-      - job-service
-      - job-recommendation-engine
-      - employee-recommendation-engine
-      - roleplay-service
-    ports:
-      - "8080:8080"
-    networks:
-      hire-genie-network:
-    restart: unless-stopped
+#  eureka-discovery-server:
+#    container_name: eureka-discovery-server
+#    image: hire-genie/eureka-discovery-server:latest
+#    ports:
+#      - "8761:8761"
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 30s
+#
+#  config-server:
+#    container_name: config-server
+#    image: hire-genie/config-server:latest
+#    environment:
+#      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN}
+#    depends_on:
+#      eureka-discovery-server:
+#        condition: service_healthy
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 30s
+#
+#  security-service:
+#    container_name: security-service
+#    image: hire-genie/security-service:latest
+#    depends_on:
+#      security-service-mongo:
+#        condition: service_healthy
+#      hire-genie-redis:
+#        condition: service_healthy
+#      hire-genie-zipkin:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9096/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
+#
+#  resume-builder:
+#    container_name: resume-builder
+#    image: hire-genie/resume-builder:latest
+#    depends_on:
+#      config-server:
+#        condition: service_healthy
+#      hire-genie-zipkin:
+#        condition: service_healthy
+#      resume-builder-pg:
+#        condition: service_healthy
+#      hire-genie-redis:
+#        condition: service_healthy
+#      hire-genie-kafka:
+#        condition: service_healthy
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
+#
+#  job-service:
+#    container_name: job-service
+#    image: hire-genie/job-service:latest
+#    depends_on:
+#      hire-genie-zipkin:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#      job-service-pg:
+#        condition: service_healthy
+#      hire-genie-kafka:
+#        condition: service_healthy
+#      hire-genie-redis:
+#        condition: service_healthy
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9091/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
+#
+#  job-recommendation-engine:
+#    container_name: job-recommendation-engine
+#    image: hire-genie/job-recommendation-engine:latest
+#    depends_on:
+#      hire-genie-zipkin:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#      job-recommendation-engine-pg:
+#        condition: service_healthy
+#      resume-builder:
+#        condition: service_healthy
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
+#
+#  employee-recommendation-engine:
+#    container_name: employee-recommendation-engine
+#    image: hire-genie/employee-recommendation-engine:latest
+#    depends_on:
+#      hire-genie-zipkin:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#      employee-recommendation-engine-pg:
+#        condition: service_healthy
+#      job-service:
+#        condition: service_healthy
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9097/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
+#
+#  roleplay-service:
+#    container_name: roleplay-service
+#    image: hire-genie/roleplay-service:latest
+#    depends_on:
+#      hire-genie-zipkin:
+#        condition: service_healthy
+#      config-server:
+#        condition: service_healthy
+#      job-service:
+#        condition: service_healthy
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9095/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
+#
+#  api-gateway:
+#    container_name: api-gateway
+#    image: hire-genie/api-gateway:latest
+#    depends_on:
+#      security-service:
+#        condition: service_healthy
+#      resume-builder:
+#        condition: service_healthy
+#      job-service:
+#        condition: service_healthy
+#      job-recommendation-engine:
+#        condition: service_healthy
+#      employee-recommendation-engine:
+#        condition: service_healthy
+#      roleplay-service:
+#        condition: service_healthy
+#    ports:
+#      - "8080:8080"
+#    networks:
+#      hire-genie-network:
+#    restart: unless-stopped
+#    healthcheck:
+#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
+#      interval: 15s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 40s
 
 volumes:
   resume-builder-data:

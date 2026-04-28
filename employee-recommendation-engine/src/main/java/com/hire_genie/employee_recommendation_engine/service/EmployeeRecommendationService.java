@@ -1,7 +1,9 @@
 package com.hire_genie.employee_recommendation_engine.service;
 
 import com.hire_genie.employee_recommendation_engine.dtoMappings.EmployeeProfile;
+import com.hire_genie.employee_recommendation_engine.dtoMappings.ProfileResponse;
 import com.hire_genie.employee_recommendation_engine.feignClient.JobServiceFeignClient;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -9,7 +11,9 @@ import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -19,9 +23,7 @@ public class EmployeeRecommendationService {
     private final VectorStore vectorStore;
     private final JobServiceFeignClient jobServiceFeignClient;
 
-    public List<EmployeeProfile> recommendEmployee(String secret, String email, String roles, Long jobId) {
-
-        String jobDescription = jobServiceFeignClient.fetchJobDescription(secret, email, roles, jobId);
+    public List<ProfileResponse> recommendEmployee(String jobDescription) {
 
         SearchRequest searchRequest = SearchRequest.builder()
                 .query(jobDescription)
@@ -36,14 +38,18 @@ public class EmployeeRecommendationService {
                 .toList();
     }
 
-    private EmployeeProfile mapToEmployeeProfile(Document document) {
+    private ProfileResponse mapToEmployeeProfile(Document document) {
 
         var metadata = document.getMetadata();
 
-        return EmployeeProfile.builder()
+        List<String> urlList = (List<String>) metadata.get("urls");
+
+        return ProfileResponse.builder()
+                .profileId(((Number) metadata.get("profileId")).longValue())
                 .email((String) metadata.get("email"))
                 .fullName((String) metadata.get("fullName"))
                 .profession((String) metadata.get("profession"))
+                .urls(urlList != null ? new HashSet<>(urlList) : Set.of())
                 .build();
     }
 
