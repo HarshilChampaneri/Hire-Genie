@@ -35,4 +35,10 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
+    @PostMapping("/send-registration-otp")
+    public ResponseEntity<MessageResponse> sendRegistrationOtp(
+            @Valid @RequestBody RegistrationOtpRequest request) {
+        return ResponseEntity.ok(service.sendRegistrationOtp(request));
+    }
+
 }

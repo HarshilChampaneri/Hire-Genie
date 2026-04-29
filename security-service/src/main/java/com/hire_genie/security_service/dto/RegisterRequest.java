@@ -21,6 +21,9 @@ public record RegisterRequest(
         @NotEmpty
         Set<Role> roles,
 
-        String adminSecret
+        String adminSecret,
+
+        @NotBlank
+        String otp
 ) {
 }

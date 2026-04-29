@@ -52,6 +52,7 @@ public class GatewayConfig {
         if (path.contains("/auth/login") ||
             path.contains("/auth/register") ||
             path.contains("/auth/verify-otp") ||
+            path.contains("/auth/send-registration-otp") ||
             path.contains("/v3/api-docs") ||
             path.contains("/swagger-ui")
         ) {

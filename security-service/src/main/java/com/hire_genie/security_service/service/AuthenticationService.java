@@ -27,10 +27,17 @@ public class AuthenticationService {
     private final OtpService otpService;
     private final EmailService emailService;
 
+    private static final String OTP_PREFIX = "otp:";
+    private static final String REG_OTP_PREFIX = "reg-otp:";
+
     @Value("${app.security.admin-secret}")
     private String internalAdminSecret;
 
     public AuthResponse register(RegisterRequest request) {
+
+        if (!otpService.verifyOtp(REG_OTP_PREFIX + request.email(), request.otp())) {
+            throw new IllegalArgumentException("Invalid or expired OTP. Please try again.");
+        }
 
         if (userRepository.findByEmail(request.email()).isPresent()) {
             throw new UserAlreadyExistsException("An account with this email already exists.");
@@ -68,7 +75,7 @@ public class AuthenticationService {
                 )
         );
 
-        String otp = otpService.generateAndStoreOtp(request.email());
+        String otp = otpService.generateAndStoreOtp(OTP_PREFIX + request.email());
         emailService.sendOtpEmail(request.email(), otp);
 
         return MessageResponse.builder()
@@ -78,7 +85,7 @@ public class AuthenticationService {
 
     public AuthResponse verifyOtp(OtpVerificationRequest request) {
 
-        if (!otpService.verifyOtp(request.email(), request.otp())) {
+        if (!otpService.verifyOtp(OTP_PREFIX + request.email(), request.otp())) {
             throw new IllegalArgumentException("Invalid or expired OTP. Please try again.");
         }
 
@@ -106,4 +113,20 @@ public class AuthenticationService {
         tokenBlacklistService.blacklist(token, expiryMillis);
 
     }
+
+    public MessageResponse sendRegistrationOtp(RegistrationOtpRequest request) {
+
+        if (userRepository.findByEmail(request.email()).isPresent()) {
+            throw new UserAlreadyExistsException("An account with this email already exists.");
+        }
+
+        String otp = otpService.generateAndStoreOtp(REG_OTP_PREFIX + request.email());
+        emailService.sendOtpEmail(request.email(), otp);
+
+        return MessageResponse.builder()
+                .message("OTP sent to you email. Please verify to complete registration.")
+                .build();
+
+    }
+
 }
