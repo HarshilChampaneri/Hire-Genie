@@ -4,10 +4,12 @@ import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
+import com.hire_genie.job_service.dto.roleplay.RoleplayDTO;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
 import com.hire_genie.job_service.feignClient.EmployeeRecommendationServiceFeignClient;
 import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
+import com.hire_genie.job_service.feignClient.RoleplayServiceFeignClient;
 import com.hire_genie.job_service.kafkaEvent.CandidateProfileEvent;
 import com.hire_genie.job_service.kafkaEvent.JobApplicationEvent;
 import com.hire_genie.job_service.mapper.JobApplicationMapper;
@@ -58,6 +60,7 @@ public class JobServiceImpl implements JobService {
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final EmailService emailService;
     private final EmployeeRecommendationServiceFeignClient employeeRecommendationServiceFeignClient;
+    private final RoleplayServiceFeignClient roleplayServiceFeignClient;
 
     @Override
     @Transactional
@@ -268,6 +271,18 @@ public class JobServiceImpl implements JobService {
 
         return employeeRecommendationServiceFeignClient.recommendEmployees(jobDescription);
 
+    }
+
+    @Override
+    public RoleplayDTO startRoleplay(Long jobId) {
+
+        Job job = jobRepository.findByJobIdIgnoringUserEmail(jobId).orElseThrow(
+                () -> new ResourceNotFoundException("Job", jobId)
+        );
+
+        String jobDescription = job.getJobDescription();
+
+        return roleplayServiceFeignClient.startRoleplay(jobDescription);
     }
 
     @KafkaListener(topics = CANDIDATE_PROFILE_RESPONSES, groupId = JOB_SERVICE_GROUP)

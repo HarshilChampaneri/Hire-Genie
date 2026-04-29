@@ -1,14 +1,9 @@
 package com.hire_genie.roleplay_service.service.impl;
 
-import com.hire_genie.roleplay_service.aiPromptTemplates.BehavioralQuestionsTemplate;
-import com.hire_genie.roleplay_service.aiPromptTemplates.TechnicalQuestionsTemplate;
-import com.hire_genie.roleplay_service.dto.job.JobResponse;
 import com.hire_genie.roleplay_service.dto.roleplay.BehavioralQuestionDTO;
 import com.hire_genie.roleplay_service.dto.roleplay.RoleplayDTO;
 import com.hire_genie.roleplay_service.dto.roleplay.TechnicalQuestionDTO;
-import com.hire_genie.roleplay_service.feignClient.FetchJobFeignClient;
 import com.hire_genie.roleplay_service.service.RoleplayService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -31,27 +26,10 @@ import static com.hire_genie.roleplay_service.aiPromptTemplates.TechnicalQuestio
 @RequiredArgsConstructor
 public class RoleplayServiceImpl implements RoleplayService {
 
-    private final FetchJobFeignClient fetchJobFeignClient;
     private final ChatClient chatClient;
 
     @Override
-    public RoleplayDTO startRoleplayService(Long jobId, HttpServletRequest request) throws Exception {
-
-        String email = request.getHeader("X-User-Email");
-        String secret = request.getHeader("X-Internal-Secret");
-        String roles = request.getHeader("X-User-Roles");
-
-        log.info("Fetching Job with jobId: {}", jobId);
-        JobResponse jobResponse = fetchJobFeignClient.fetchJobByJobId(secret, email, roles, jobId);
-        if (jobResponse == null) {
-            throw new Exception("Job Not Found");
-        }
-        log.info("Job with jobId: {}, fetched successfully.", jobId);
-
-        if (jobResponse.jobDescription().isEmpty()) {
-            throw new Exception("Job Description is Empty cannot proceed further.");
-        }
-        String jobDescription = jobResponse.jobDescription();
+    public RoleplayDTO startRoleplayService(String jobDescription) {
 
         // Generating Technical Questions:
         BeanOutputConverter<List<TechnicalQuestionDTO>> technicalQuestionsConvertor = new BeanOutputConverter<>(

@@ -5,9 +5,7 @@ import com.hire_genie.job_recommendation_engine.dtoMappings.jobDTO.JobResponse;
 import com.hire_genie.job_recommendation_engine.enums.JobType;
 import com.hire_genie.job_recommendation_engine.enums.WorkMode;
 import com.hire_genie.job_recommendation_engine.exception.InvalidAccessException;
-import com.hire_genie.job_recommendation_engine.feignClient.UserProfileFeignClient;
 import com.hire_genie.job_recommendation_engine.security.util.LoggedInUser;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -24,7 +22,6 @@ import java.util.List;
 public class JobRecommendationService {
 
     private final LoggedInUser loggedInUser;
-    private final UserProfileFeignClient userProfileFeignClient;
     private final VectorStore vectorStore;
 
     public List<JobResponse> recommendJobs(ResumeRequest userProfile) {

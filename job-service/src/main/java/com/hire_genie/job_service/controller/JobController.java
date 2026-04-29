@@ -4,6 +4,7 @@ import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
+import com.hire_genie.job_service.dto.roleplay.RoleplayDTO;
 import com.hire_genie.job_service.feignClient.EmployeeRecommendationServiceFeignClient;
 import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
 import com.hire_genie.job_service.service.JobService;
@@ -78,6 +79,11 @@ public class JobController {
     @PostMapping("/recommend/employees/{jobId}")
     public ResponseEntity<List<ProfileResponse>> recommendEmployees(@PathVariable Long jobId) {
         return ResponseEntity.ok(jobService.fetchJobDescriptionAndRecommendEmployees(jobId));
+    }
+
+    @PostMapping("/start/roleplay/{jobId}")
+    public ResponseEntity<RoleplayDTO> startRoleplay(@PathVariable Long jobId) {
+        return ResponseEntity.ok(jobService.startRoleplay(jobId));
     }
 
 }

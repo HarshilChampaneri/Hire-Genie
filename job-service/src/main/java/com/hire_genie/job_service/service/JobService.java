@@ -4,6 +4,7 @@ import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
+import com.hire_genie.job_service.dto.roleplay.RoleplayDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,5 +25,7 @@ public interface JobService {
     void applyForJob(Long jobId);
 
     List<ProfileResponse> fetchJobDescriptionAndRecommendEmployees(Long jobId);
+
+    RoleplayDTO startRoleplay(Long jobId);
 
 }
