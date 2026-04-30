@@ -75,15 +75,6 @@ const EducationSection = () => {
   };
 
   useEffect(() => {
-    
-      const fetchEducations = async () => {
-        try {
-          const { data } = await resumeService.getAllEducations(token);
-          setEducations(data.educations || []);
-        } catch { setEducations([]); }
-        finally { setLoading(false); }
-      };
-    
     fetchEducations(); }, []);
 
   const handleNewChange = (i, field, value) => {
@@ -118,10 +109,11 @@ const EducationSection = () => {
   const handleUpdate = async () => {
     setSaving(true); setError(''); setSuccess('');
     try {
+      const { educationId, ...rest } = editForm;
       await resumeService.updateEducation(editingId, {
-        ...editForm,
-        grades: editForm.grades !== '' ? Number(editForm.grades) : undefined,
-        endDate: editForm.isEducationInProgress ? undefined : editForm.endDate || undefined,
+        ...rest,
+        grades: rest.grades !== '' ? Number(rest.grades) : undefined,
+        endDate: rest.isEducationInProgress ? undefined : rest.endDate || undefined,
       }, token);
       setSuccess('Education updated!');
       setEditingId(null); setEditForm(null);
