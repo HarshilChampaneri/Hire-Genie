@@ -309,6 +309,4 @@ public class JobServiceImpl implements JobService {
         emailService.sendJobApplicationToEmail(profileResponse, job);
     }
 
-
-
 }
