@@ -1,41 +1,18 @@
-// import { useNavigate } from 'react-router-dom';
-// import Navbar from '../components/Navbar';
-
-// const Dashboard = () => {
-//   const navigate = useNavigate();
-
-//   return (
-//     <div className="min-h-screen bg-slate-900 text-white">
-//       <Navbar />
-//       <div className="p-8">
-//         <h1 className="text-3xl font-bold text-blue-400">Dashboard</h1>
-//         <p className="text-slate-400 mt-2">Welcome back! You are now logged in.</p>
-//         <button
-//           onClick={() => navigate('/resume-builder')}
-//           className="mt-6 px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-lg transition-all"
-//         >
-//           Build My Resume →
-//         </button>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Dashboard;
-
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
-const ActionCard = ({ icon, label, description, onClick, accent = 'blue' }) => {
+const ActionCard = ({ icon, label, description, onClick, accent = 'blue', badge = null }) => {
   const accents = {
-    blue: 'border-blue-500/30 hover:border-blue-400/60 bg-blue-500/5',
-    purple: 'border-purple-500/30 hover:border-purple-400/60 bg-purple-500/5',
+    blue:    'border-blue-500/30 hover:border-blue-400/60 bg-blue-500/5',
+    purple:  'border-purple-500/30 hover:border-purple-400/60 bg-purple-500/5',
     emerald: 'border-emerald-500/30 hover:border-emerald-400/60 bg-emerald-500/5',
+    amber:   'border-amber-500/30 hover:border-amber-400/60 bg-amber-500/5',
   };
   const iconAccents = {
-    blue: 'bg-blue-600/20 text-blue-400',
-    purple: 'bg-purple-600/20 text-purple-400',
+    blue:    'bg-blue-600/20 text-blue-400',
+    purple:  'bg-purple-600/20 text-purple-400',
     emerald: 'bg-emerald-600/20 text-emerald-400',
+    amber:   'bg-amber-600/20 text-amber-400',
   };
 
   return (
@@ -44,8 +21,15 @@ const ActionCard = ({ icon, label, description, onClick, accent = 'blue' }) => {
       className={`w-full text-left p-6 bg-slate-800 border rounded-2xl transition-all duration-200
                   hover:shadow-lg hover:shadow-black/20 hover:-translate-y-0.5 ${accents[accent]}`}
     >
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-4 ${iconAccents[accent]}`}>
-        {icon}
+      <div className="flex items-start justify-between mb-4">
+        <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${iconAccents[accent]}`}>
+          {icon}
+        </div>
+        {badge && (
+          <span className="text-xs font-bold px-2 py-1 rounded-full bg-blue-600/20 border border-blue-500/30 text-blue-400">
+            {badge}
+          </span>
+        )}
       </div>
       <h3 className="text-white font-bold text-lg mb-1">{label}</h3>
       <p className="text-slate-400 text-sm leading-relaxed">{description}</p>
@@ -78,13 +62,21 @@ const Dashboard = () => {
         </div>
 
         {/* Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-5 mb-10">
           <ActionCard
             icon="💼"
             label="Browse Jobs"
-            description="Explore open job listings, filter by company, and apply to roles that match your skills."
+            description="Explore all open job listings, filter by company, and apply to roles that match your skills."
             onClick={() => navigate('/jobs')}
             accent="blue"
+          />
+          <ActionCard
+            icon="🤖"
+            label="Recommended Jobs"
+            description="Let AI analyse your resume and recommend the most relevant job openings tailored just for you."
+            onClick={() => navigate('/recommended-jobs')}
+            accent="amber"
+            badge="AI"
           />
           <ActionCard
             icon="📄"
@@ -108,9 +100,10 @@ const Dashboard = () => {
           <div className="flex flex-col gap-3">
             {[
               { step: '1', text: 'Go to Browse Jobs to explore all available listings.' },
-              { step: '2', text: 'Click "Apply Now" on any job to submit your application instantly.' },
-              { step: '3', text: 'Use the 🎭 Roleplay button on a job to generate AI interview questions for that role.' },
-              { step: '4', text: 'Head to Resume Builder to create a polished resume to share with recruiters.' },
+              { step: '2', text: 'Try Recommended Jobs — AI will scan your resume and surface the best-fit roles for you.' },
+              { step: '3', text: 'Click "Apply Now" on any job to submit your application instantly.' },
+              { step: '4', text: 'Use the 🎭 Roleplay button on a job to generate AI interview questions for that role.' },
+              { step: '5', text: 'Head to Resume Builder to create a polished resume to share with recruiters.' },
             ].map(({ step, text }) => (
               <div key={step} className="flex items-start gap-3">
                 <span className="shrink-0 w-6 h-6 bg-emerald-600/20 border border-emerald-500/40 text-emerald-400
