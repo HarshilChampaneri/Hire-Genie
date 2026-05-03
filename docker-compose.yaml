@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
 
   #  Tools and Architecture Docker Services:-
@@ -217,20 +215,46 @@ services:
 
   #  Spring Boot Application Docker Services:-
 
-#  eureka-discovery-server:
-#    container_name: eureka-discovery-server
-#    image: hire-genie/eureka-discovery-server:latest
-#    ports:
-#      - "8761:8761"
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 30s
+  eureka-discovery-server:
+    build:
+      context: ./eureka-discovery-server
+      dockerfile: Dockerfile
+    container_name: eureka-discovery-server
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8761/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
+
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    container_name: config-server
+    ports:
+      - "8888:8888"
+    env_file:
+      - .env
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-discovery-server:8761/eureka/
+      - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/HarshilChampaneri/hire-genie-config-repo
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
+
 #
 #  config-server:
 #    container_name: config-server
@@ -422,3 +446,4 @@ volumes:
 
 networks:
   hire-genie-network:
+    driver: bridge
