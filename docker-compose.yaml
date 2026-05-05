@@ -11,7 +11,7 @@ services:
     environment:
       - STORAGE_TYPE=mem
     networks:
-      hire-genie-network:
+      - hire-genie-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:9411/health"]
@@ -33,7 +33,7 @@ services:
     volumes:
       - security-service-data:/data/db
     networks:
-      hire-genie-network:
+      - hire-genie-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "-u", "user", "-p", "pass", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping')"]
@@ -53,7 +53,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
     networks:
-      hire-genie-network:
+      - hire-genie-network
     volumes:
       - resume-builder-data:/var/lib/postgresql
     restart: unless-stopped
@@ -75,7 +75,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
     networks:
-      hire-genie-network:
+      - hire-genie-network
     volumes:
       - job-service-data:/var/lib/postgresql
     restart: unless-stopped
@@ -97,7 +97,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
     networks:
-      hire-genie-network:
+      - hire-genie-network
     volumes:
       - job-recommendation-engine-data:/var/lib/postgresql
     restart: unless-stopped
@@ -119,7 +119,7 @@ services:
       - POSTGRES_USER=user
       - POSTGRES_PASSWORD=pass
     networks:
-      hire-genie-network:
+      - hire-genie-network
     volumes:
       - employee-recommendation-engine-data:/var/lib/postgresql
     restart: unless-stopped
@@ -166,7 +166,7 @@ services:
       KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
       KAFKA_NUM_PARTITIONS: 1
     networks:
-      hire-genie-network:
+      - hire-genie-network
     volumes:
       - ./docker/kafka_data:/var/lib/kafka/data
     restart: unless-stopped
@@ -191,7 +191,7 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: hire-genie-kafka:9092
       DYNAMIC_CONFIG_ENABLED: 'true'
     networks:
-      hire-genie-network:
+      - hire-genie-network
     restart: unless-stopped
 
   #  REDIS:-
@@ -204,7 +204,7 @@ services:
     volumes:
       - hire-genie-redis-data:/data
     networks:
-      hire-genie-network:
+      - hire-genie-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "pass", "ping"]
@@ -255,71 +255,66 @@ services:
     networks:
       - hire-genie-network
 
-#
-#  config-server:
-#    container_name: config-server
-#    image: hire-genie/config-server:latest
-#    environment:
-#      - GITHUB_PERSONAL_ACCESS_TOKEN=${GITHUB_PERSONAL_ACCESS_TOKEN}
-#    depends_on:
-#      eureka-discovery-server:
-#        condition: service_healthy
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8888/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 30s
-#
-#  security-service:
-#    container_name: security-service
-#    image: hire-genie/security-service:latest
-#    depends_on:
-#      security-service-mongo:
-#        condition: service_healthy
-#      hire-genie-redis:
-#        condition: service_healthy
-#      hire-genie-zipkin:
-#        condition: service_healthy
-#      config-server:
-#        condition: service_healthy
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9096/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 40s
-#
-#  resume-builder:
-#    container_name: resume-builder
-#    image: hire-genie/resume-builder:latest
-#    depends_on:
-#      config-server:
-#        condition: service_healthy
-#      hire-genie-zipkin:
-#        condition: service_healthy
-#      resume-builder-pg:
-#        condition: service_healthy
-#      hire-genie-redis:
-#        condition: service_healthy
-#      hire-genie-kafka:
-#        condition: service_healthy
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 40s
-#
+  security-service:
+    build:
+      context: ./security-service
+      dockerfile: Dockerfile
+    container_name: security-service
+    ports:
+      - "9096:9096"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      security-service-mongo:
+        condition: service_healthy
+      hire-genie-redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9096/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
+
+  resume-builder:
+    build:
+      context: ./resume-builder
+      dockerfile: Dockerfile
+    container_name: resume-builder
+    ports:
+      - "9090:9090"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
+    depends_on:
+      eureka-discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      resume-builder-pg:
+        condition: service_healthy
+      hire-genie-redis:
+        condition: service_healthy
+      hire-genie-kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:9090/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+        - hire-genie-network
+
 #  job-service:
 #    container_name: job-service
 #    image: hire-genie/job-service:latest
