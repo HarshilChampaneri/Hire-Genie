@@ -14,25 +14,35 @@ export const YearMonthPicker = ({ label, value, onChange, required, disabled }) 
     return [parts[0] || '', parts[1] || ''];
   };
 
-  const [localMonth, setLocalMonth] = useState(() => parseValue(value)[0]);
-  const [localYear, setLocalYear] = useState(() => parseValue(value)[1]);
-
-  // Sync local state if parent resets/changes the value externally
-  useEffect(() => {
-    const [m, y] = parseValue(value);
-    setLocalMonth(m);
-    setLocalYear(y);
-  }, [value]);
+  const [localMonth, localYear] = parseValue(value);
 
   const handleMonthChange = (m) => {
-    setLocalMonth(m);
     if (m && localYear) onChange(`${m}-${localYear}`);
   };
 
   const handleYearChange = (y) => {
-    setLocalYear(y);
     if (localMonth && y) onChange(`${localMonth}-${y}`);
   };
+
+  // const [localMonth, setLocalMonth] = useState(() => parseValue(value)[0]);
+  // const [localYear, setLocalYear] = useState(() => parseValue(value)[1]);
+
+  // Sync local state if parent resets/changes the value externally
+  // useEffect(() => {
+  //   const [m, y] = parseValue(value);
+  //   setLocalMonth(m);
+  //   setLocalYear(y);
+  // }, [value]);
+
+  // const handleMonthChange = (m) => {
+  //   setLocalMonth(m);
+  //   if (m && localYear) onChange(`${m}-${localYear}`);
+  // };
+
+  // const handleYearChange = (y) => {
+  //   setLocalYear(y);
+  //   if (localMonth && y) onChange(`${localMonth}-${y}`);
+  // };
 
   return (
     <div className="relative z-20">

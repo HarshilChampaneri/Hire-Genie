@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { resumeService } from '../../api/resumeService';
 import { useAuth } from '../../context/useAuth';
-import { YearMonthPicker, DynamicListInput, SectionCard, AIButton } from './resumeUtils';
+import { YearMonthPicker, DynamicListInput, SectionCard, AIButton } from './ResumeUtils';
 
 const emptyExp = () => ({
   companyName: '', position: '', startDate: '', isWorkingInCompany: false,
@@ -69,15 +69,6 @@ const ExperienceSection = () => {
   };
 
   useEffect(() => {
-    
-    // const fetchExperiences = async () => {
-    //   try {
-    //     const { data } = await resumeService.getAllExperiences(token);
-    //     setExperiences(data.experiences || []);
-    //   } catch { setExperiences([]); }
-    //   finally { setLoading(false); }
-    // };
-    
     fetchExperiences(); }, []);
 
   const handleNewChange = (i, field, value) => {

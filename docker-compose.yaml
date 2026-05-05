@@ -242,6 +242,7 @@ services:
       - .env
     environment:
       - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-discovery-server:8761/eureka/
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
       - SPRING_CLOUD_CONFIG_SERVER_GIT_URI=https://github.com/HarshilChampaneri/hire-genie-config-repo
     depends_on:
       eureka-discovery-server:
@@ -475,6 +476,26 @@ services:
       start_period: 60s
     networks:
       - hire-genie-network
+
+  hire-genie-frontend:
+    build:
+      context: ./hire-genie-frontend
+      dockerfile: Dockerfile
+    container_name: hire-genie-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - hire-genie-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:80"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   resume-builder-data:

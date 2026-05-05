@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { resumeService } from '../../api/resumeService';
 import { useAuth } from '../../context/useAuth';
-import { SectionCard } from './resumeUtils';
+import { SectionCard } from './ResumeUtils';
 
 const emptyCert = () => ({ certificateTitle: '', certificateUrl: '' });
 

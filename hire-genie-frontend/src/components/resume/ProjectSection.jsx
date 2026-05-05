@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { resumeService } from '../../api/resumeService';
 import { useAuth } from '../../context/useAuth';
-import { YearMonthPicker, DynamicListInput, SectionCard, AIButton } from './resumeUtils';
+import { YearMonthPicker, DynamicListInput, SectionCard, AIButton } from './ResumeUtils';
 
 const emptyProject = () => ({
   projectName: '', projectUrl: '', projectTechStacks: [''],

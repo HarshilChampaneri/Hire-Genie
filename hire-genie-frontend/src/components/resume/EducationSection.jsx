@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { resumeService } from '../../api/resumeService';
 import { useAuth } from '../../context/useAuth';
-import { YearMonthPicker, SectionCard } from './resumeUtils';
+import { YearMonthPicker, SectionCard } from './ResumeUtils';
 
 const emptyEdu = () => ({
   educationTitle: '', location: '', fieldOfStudy: '',
