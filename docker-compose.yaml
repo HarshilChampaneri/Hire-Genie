@@ -267,6 +267,8 @@ services:
       - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
     depends_on:
+      hire-genie-zipkin:
+        condition: service_healthy
       eureka-discovery-server:
         condition: service_healthy
       config-server:
@@ -296,6 +298,8 @@ services:
       - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
       - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
     depends_on:
+      hire-genie-zipkin:
+        condition: service_healthy
       eureka-discovery-server:
         condition: service_healthy
       config-server:
@@ -315,121 +319,162 @@ services:
     networks:
         - hire-genie-network
 
-#  job-service:
-#    container_name: job-service
-#    image: hire-genie/job-service:latest
-#    depends_on:
-#      hire-genie-zipkin:
-#        condition: service_healthy
-#      config-server:
-#        condition: service_healthy
-#      job-service-pg:
-#        condition: service_healthy
-#      hire-genie-kafka:
-#        condition: service_healthy
-#      hire-genie-redis:
-#        condition: service_healthy
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9091/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 40s
-#
-#  job-recommendation-engine:
-#    container_name: job-recommendation-engine
-#    image: hire-genie/job-recommendation-engine:latest
-#    depends_on:
-#      hire-genie-zipkin:
-#        condition: service_healthy
-#      config-server:
-#        condition: service_healthy
-#      job-recommendation-engine-pg:
-#        condition: service_healthy
-#      resume-builder:
-#        condition: service_healthy
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 40s
-#
-#  employee-recommendation-engine:
-#    container_name: employee-recommendation-engine
-#    image: hire-genie/employee-recommendation-engine:latest
-#    depends_on:
-#      hire-genie-zipkin:
-#        condition: service_healthy
-#      config-server:
-#        condition: service_healthy
-#      employee-recommendation-engine-pg:
-#        condition: service_healthy
-#      job-service:
-#        condition: service_healthy
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9097/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 40s
-#
-#  roleplay-service:
-#    container_name: roleplay-service
-#    image: hire-genie/roleplay-service:latest
-#    depends_on:
-#      hire-genie-zipkin:
-#        condition: service_healthy
-#      config-server:
-#        condition: service_healthy
-#      job-service:
-#        condition: service_healthy
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9095/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 40s
-#
-#  api-gateway:
-#    container_name: api-gateway
-#    image: hire-genie/api-gateway:latest
-#    depends_on:
-#      security-service:
-#        condition: service_healthy
-#      resume-builder:
-#        condition: service_healthy
-#      job-service:
-#        condition: service_healthy
-#      job-recommendation-engine:
-#        condition: service_healthy
-#      employee-recommendation-engine:
-#        condition: service_healthy
-#      roleplay-service:
-#        condition: service_healthy
-#    ports:
-#      - "8080:8080"
-#    networks:
-#      hire-genie-network:
-#    restart: unless-stopped
-#    healthcheck:
-#      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health"]
-#      interval: 15s
-#      timeout: 5s
-#      retries: 5
-#      start_period: 40s
+  job-service:
+    build:
+      context: ./job-service
+      dockerfile: Dockerfile
+    container_name: job-service
+    ports:
+      - "9091:9091"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
+    depends_on:
+      hire-genie-zipkin:
+        condition: service_healthy
+      eureka-discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      job-service-pg:
+        condition: service_healthy
+      hire-genie-redis:
+        condition: service_healthy
+      hire-genie-kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:9091/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
+
+  job-recommendation-engine:
+    build:
+      context: ./job-recommendation-engine
+      dockerfile: Dockerfile
+    container_name: job-recommendation-engine
+    ports:
+      - "9093:9093"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
+    depends_on:
+      hire-genie-zipkin:
+        condition: service_healthy
+      eureka-discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      job-recommendation-engine-pg:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:9093/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
+
+  employee-recommendation-engine:
+    build:
+      context: ./employee-recommendation-engine
+      dockerfile: Dockerfile
+    container_name: employee-recommendation-engine
+    ports:
+      - "9097:9097"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
+    depends_on:
+      hire-genie-zipkin:
+        condition: service_healthy
+      eureka-discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      employee-recommendation-engine-pg:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:9097/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
+
+  roleplay-service:
+    build:
+      context: ./roleplay-service
+      dockerfile: Dockerfile
+    container_name: roleplay-service
+    ports:
+      - "9095:9095"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
+    depends_on:
+      hire-genie-zipkin:
+        condition: service_healthy
+      eureka-discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:9095/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - CONFIG_SERVER_URL=http://config-server:8888
+      - SPRING_CONFIG_IMPORT=configserver:http://config-server:8888
+      - JAVA_TOOL_OPTIONS=-Deureka.client.serviceUrl.defaultZone=http://eureka-discovery-server:8761/eureka/
+    depends_on:
+      hire-genie-zipkin:
+        condition: service_healthy
+      eureka-discovery-server:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      security-service:
+        condition: service_healthy
+      resume-builder:
+        condition: service_healthy
+      job-service:
+        condition: service_healthy
+      job-recommendation-engine:
+        condition: service_healthy
+      employee-recommendation-engine:
+        condition: service_healthy
+      roleplay-service:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:8080/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - hire-genie-network
 
 volumes:
   resume-builder-data:
