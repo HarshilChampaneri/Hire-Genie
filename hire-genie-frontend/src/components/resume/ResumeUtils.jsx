@@ -1,48 +1,31 @@
 // Shared utility components for the Resume Builder
 
 // YearMonth picker — sends "MM-yyyy" string as required by backend JacksonDateConfig
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+
+const parseValue = (v) => {
+  if (!v) return ['', ''];
+  const parts = v.split('-');
+  return [parts[0] || '', parts[1] || ''];
+};
 
 export const YearMonthPicker = ({ label, value, onChange, required, disabled }) => {
   const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 40 }, (_, i) => currentYear - i);
 
-  const parseValue = (v) => {
-    if (!v) return ['', ''];
-    const parts = v.split('-');
-    return [parts[0] || '', parts[1] || ''];
-  };
-
-  const [localMonth, localYear] = parseValue(value);
+  const [localMonth, setLocalMonth] = useState(() => parseValue(value)[0]);
+  const [localYear, setLocalYear] = useState(() => parseValue(value)[1]);
 
   const handleMonthChange = (m) => {
+    setLocalMonth(m);
     if (m && localYear) onChange(`${m}-${localYear}`);
   };
 
   const handleYearChange = (y) => {
+    setLocalYear(y);
     if (localMonth && y) onChange(`${localMonth}-${y}`);
   };
-
-  // const [localMonth, setLocalMonth] = useState(() => parseValue(value)[0]);
-  // const [localYear, setLocalYear] = useState(() => parseValue(value)[1]);
-
-  // Sync local state if parent resets/changes the value externally
-  // useEffect(() => {
-  //   const [m, y] = parseValue(value);
-  //   setLocalMonth(m);
-  //   setLocalYear(y);
-  // }, [value]);
-
-  // const handleMonthChange = (m) => {
-  //   setLocalMonth(m);
-  //   if (m && localYear) onChange(`${m}-${localYear}`);
-  // };
-
-  // const handleYearChange = (y) => {
-  //   setLocalYear(y);
-  //   if (localMonth && y) onChange(`${localMonth}-${y}`);
-  // };
 
   return (
     <div className="relative z-20">

@@ -9,6 +9,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
 @Data
 @Entity
@@ -55,6 +56,11 @@ public class Job {
     @EqualsAndHashCode.Exclude
     @JoinColumn(name = "company_id")
     private Company company;
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "job")
+    private List<JobApplication> jobApplications;
 
     @CreationTimestamp
     @Column(nullable = false)

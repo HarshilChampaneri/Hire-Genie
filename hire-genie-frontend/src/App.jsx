@@ -11,10 +11,9 @@ import CompanyDetailPage from './pages/CompanyDetailPage';
 import RecruiterDashboard from './pages/RecruiterDashboard';
 import CompanyManagement from './pages/CompanyManagement';
 import JobManagement from './pages/JobManagement';
+import PendingApplicationsPage from './pages/PendingApplicationsPage';
 import { useAuth } from './context/useAuth';
 import './App.css';
-
-// ─── Route Guards ─────────────────────────────────────────────────────────────
 
 const ProtectedRoute = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -24,15 +23,9 @@ const ProtectedRoute = ({ children }) => {
 const GuestRoute = ({ children }) => {
   const { isAuthenticated, isRecruiter } = useAuth();
   if (!isAuthenticated) return children;
-  // Recruiter → recruiter dashboard, employee → employee dashboard
   return <Navigate to={isRecruiter ? '/recruiter/dashboard' : '/dashboard'} replace />;
 };
 
-/**
- * RecruiterRoute — only allows users with the recruiter role.
- * Derived from JWT "roles" claim via AuthProvider.
- * Non-recruiters are redirected to the employee dashboard.
- */
 const RecruiterRoute = ({ children }) => {
   const { isAuthenticated, isRecruiter } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
@@ -40,19 +33,12 @@ const RecruiterRoute = ({ children }) => {
   return children;
 };
 
-/**
- * SmartDashboardRoute — guards the /dashboard path.
- * Redirects recruiters away to their own dashboard so they
- * never accidentally land on the employee view.
- */
 const SmartDashboardRoute = ({ children }) => {
   const { isAuthenticated, isRecruiter } = useAuth();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (isRecruiter) return <Navigate to="/recruiter/dashboard" replace />;
   return children;
 };
-
-// ─── App ──────────────────────────────────────────────────────────────────────
 
 function App() {
   return (
@@ -76,6 +62,7 @@ function App() {
         <Route path="/recruiter/companies" element={<RecruiterRoute><CompanyManagement /></RecruiterRoute>} />
         <Route path="/recruiter/companies/:companyId" element={<RecruiterRoute><CompanyDetailPage /></RecruiterRoute>} />
         <Route path="/recruiter/jobs" element={<RecruiterRoute><JobManagement /></RecruiterRoute>} />
+        <Route path="/recruiter/pending-applications" element={<RecruiterRoute><PendingApplicationsPage /></RecruiterRoute>} />
 
         {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />

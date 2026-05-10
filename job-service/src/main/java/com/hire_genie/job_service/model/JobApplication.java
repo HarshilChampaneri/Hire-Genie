@@ -1,10 +1,7 @@
 package com.hire_genie.job_service.model;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
 @Entity
@@ -19,9 +16,27 @@ public class JobApplication {
     private Long id;
 
     @Column(nullable = false)
-    private Long jobId;
+    private String candidateEmail;
 
     @Column(nullable = false)
-    private String candidateEmail;
+    private String recruiterEmail;
+
+    @Column(nullable = false)
+    private String companyName;
+
+    @Column(nullable = false)
+    private String jobTitle;
+
+    @Column(nullable = false)
+    private Boolean isJobApplicationAccepted;
+
+    @ManyToOne
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @JoinColumn(name = "job_id")
+    private Job job;
+
+    @Column(nullable = false)
+    private Boolean isJobApplicationDeleted;
 
 }

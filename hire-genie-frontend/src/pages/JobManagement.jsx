@@ -354,7 +354,16 @@ const JobManagement = () => {
       </div>
 
       {/* Modals */}
+      {/* <JobFormModal
+        isOpen={jobModalOpen}
+        onClose={() => setJobModalOpen(false)}
+        onSubmit={handleSubmit}
+        editData={editData}
+        companies={companies}
+        loading={formLoading}
+      /> */}
       <JobFormModal
+        key={companies[0]?.companyId ?? 'no-company'}
         isOpen={jobModalOpen}
         onClose={() => setJobModalOpen(false)}
         onSubmit={handleSubmit}

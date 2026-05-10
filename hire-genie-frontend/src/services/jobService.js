@@ -60,4 +60,19 @@ export const jobService = {
 
   startRoleplay: (jobId, token) =>
     axios.post(`${BASE}/start/roleplay/${jobId}`, {}, authHeader(token)),
+
+  // ─── Pending Job Applications (Recruiter Only) ───────────────────────────────
+
+  getPendingApplications: (token, page = 0, size = 10, sortBy = 'jobTitle', sortDir = 'asc') =>
+    axios.get(`${BASE}/get/pending/applications`, {
+      ...authHeader(token),
+      params: { page, size, sortBy, sortDir },
+    }),
+
+  acceptApplicant: (jobApplicationId, data, token) =>
+    axios.post(`${BASE}/accept/applicant/${jobApplicationId}`, data, authHeader(token)),
+
+  rejectApplicant: (jobApplicationId, token) =>
+    axios.post(`${BASE}/reject/applicant/${jobApplicationId}`, {}, authHeader(token)),
+
 };

@@ -4,9 +4,9 @@ import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
+import com.hire_genie.job_service.dto.jobApplication.JobApplicationPageResponse;
+import com.hire_genie.job_service.dto.jobApplication.JobApplicationRequest;
 import com.hire_genie.job_service.dto.roleplay.RoleplayDTO;
-import com.hire_genie.job_service.feignClient.EmployeeRecommendationServiceFeignClient;
-import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
 import com.hire_genie.job_service.service.JobService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -84,6 +84,33 @@ public class JobController {
     @PostMapping("/start/roleplay/{jobId}")
     public ResponseEntity<RoleplayDTO> startRoleplay(@PathVariable Long jobId) {
         return ResponseEntity.ok(jobService.startRoleplay(jobId));
+    }
+
+    @PostMapping("/accept/applicant/{jobApplicationId}")
+    public ResponseEntity<String> acceptJobApplicationAndCallForInterview(
+            @PathVariable Long jobApplicationId,
+            @RequestBody @Valid JobApplicationRequest jobApplicationRequest
+    ) {
+        jobService.acceptAndCallForInterview(jobApplicationId, jobApplicationRequest);
+        return ResponseEntity.ok("Job Application accepted, Email has been sent successfully to the applicant.");
+    }
+
+    @PostMapping("/reject/applicant/{jobApplicationId}")
+    public ResponseEntity<String> rejectJobApplicationAndCallForInterview(
+            @PathVariable Long jobApplicationId
+    ) {
+        jobService.rejectCandidateApplication(jobApplicationId);
+        return ResponseEntity.ok("Job Application rejected, Email has been sent successfully to the applicant.");
+    }
+
+    @GetMapping("/get/pending/applications")
+    public ResponseEntity<JobApplicationPageResponse> getAllMyPendingJobApplications(
+            @RequestParam(name = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(name = "size", defaultValue = "10", required = false) int size,
+            @RequestParam(name = "sortBy", defaultValue = "jobTitle", required = false) String sortBy,
+            @RequestParam(name = "sortDir", defaultValue = "asc", required = false) String sortDir
+    ) {
+        return ResponseEntity.ok(jobService.getAllMyPendingJobApplications(page, size, sortBy, sortDir));
     }
 
 }

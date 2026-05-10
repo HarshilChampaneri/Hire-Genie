@@ -4,11 +4,14 @@ import com.hire_genie.job_service.dto.candidate.ProfileResponse;
 import com.hire_genie.job_service.dto.job.request.JobRequest;
 import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
+import com.hire_genie.job_service.dto.jobApplication.JobApplicationPageResponse;
+import com.hire_genie.job_service.dto.jobApplication.JobApplicationRequest;
 import com.hire_genie.job_service.dto.roleplay.RoleplayDTO;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
 import com.hire_genie.job_service.feignClient.EmployeeRecommendationServiceFeignClient;
 import com.hire_genie.job_service.feignClient.JobRecommendationServiceFeignClient;
+import com.hire_genie.job_service.feignClient.ResumeBuilderServiceFeignClient;
 import com.hire_genie.job_service.feignClient.RoleplayServiceFeignClient;
 import com.hire_genie.job_service.kafkaEvent.CandidateProfileEvent;
 import com.hire_genie.job_service.kafkaEvent.JobApplicationEvent;
@@ -36,7 +39,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,6 +63,7 @@ public class JobServiceImpl implements JobService {
     private final EmailService emailService;
     private final EmployeeRecommendationServiceFeignClient employeeRecommendationServiceFeignClient;
     private final RoleplayServiceFeignClient roleplayServiceFeignClient;
+    private final ResumeBuilderServiceFeignClient resumeBuilderServiceFeignClient;
 
     @Override
     @Transactional
@@ -78,8 +81,16 @@ public class JobServiceImpl implements JobService {
         }
 
         String userEmail = loggedInUser.getCurrentLoggedInUser();
+        log.info("Logged in user email: {}", userEmail);
+        log.info("Looking for companyId: {} with userEmail: {}", companyId, userEmail);
 
         Company company = companyRepository.findCompanyById(companyId, userEmail);
+        if (company == null) {
+            throw new ResourceNotFoundException(
+                    "Company not found with id: " + companyId + " for user: " + userEmail
+            );
+        }
+        log.info("Company found: {}", company);
 
         Job job = jobMapper.toJobFromJobRequest(jobRequest);
         job.setIsJobDeleted(false);
@@ -247,8 +258,13 @@ public class JobServiceImpl implements JobService {
         }
 
         JobApplication jobApplication = JobApplication.builder()
-                .jobId(jobId)
                 .candidateEmail(candidateEmail)
+                .recruiterEmail(job.getUserEmail())
+                .job(job)
+                .companyName(job.getCompany().getCompanyName())
+                .jobTitle(job.getJobTitle())
+                .isJobApplicationAccepted(false)
+                .isJobApplicationDeleted(false)
                 .build();
 
         JobApplicationEvent jobApplicationEvent = jobApplicationMapper.toJobApplicationEventFromJobApplication(jobApplicationRepository.save(jobApplication));
@@ -285,6 +301,78 @@ public class JobServiceImpl implements JobService {
         return roleplayServiceFeignClient.startRoleplay(jobDescription);
     }
 
+    @Override
+    @Transactional
+    public void acceptAndCallForInterview(Long jobApplicationId, JobApplicationRequest jobApplicationRequest) {
+        JobApplication jobApplication = jobApplicationRepository.findByJobApplicationId(jobApplicationId).orElseThrow(
+                () -> new ResourceNotFoundException("JobApplication", jobApplicationId)
+        );
+
+        if (!loggedInUser.getCurrentLoggedInUser().equals(jobApplication.getRecruiterEmail()) || !jobApplication.getJob().getUserEmail().equals(loggedInUser.getCurrentLoggedInUser())) {
+            throw new InvalidAccessException("You are not authorised to accept this application.");
+        }
+
+        jobApplication.setIsJobApplicationAccepted(true);
+        jobApplication.setIsJobApplicationDeleted(true);
+        jobApplication = jobApplicationRepository.save(jobApplication);
+
+        ProfileResponse profileResponse = resumeBuilderServiceFeignClient.fetchProfileResponse(jobApplication.getCandidateEmail());
+
+        sendJobApplicationAcceptedCustomEmail(profileResponse, jobApplication, jobApplicationRequest);
+    }
+
+    @Override
+    @Transactional
+    public void rejectCandidateApplication(Long jobApplicationId) {
+        JobApplication jobApplication = jobApplicationRepository.findByJobApplicationId(jobApplicationId).orElseThrow(
+                () -> new ResourceNotFoundException("JobApplication", jobApplicationId)
+        );
+
+        if (!loggedInUser.getCurrentLoggedInUser().equals(jobApplication.getRecruiterEmail()) || !jobApplication.getJob().getUserEmail().equals(loggedInUser.getCurrentLoggedInUser())) {
+            throw new InvalidAccessException("You are not authorised to reject this application.");
+        }
+
+        jobApplication.setIsJobApplicationAccepted(false);
+        jobApplication.setIsJobApplicationDeleted(true);
+        jobApplication = jobApplicationRepository.save(jobApplication);
+
+        ProfileResponse profileResponse = resumeBuilderServiceFeignClient.fetchProfileResponse(jobApplication.getCandidateEmail());
+
+        sendJobApplicationRejectedCustomEmail(profileResponse, jobApplication.getJob());
+    }
+
+    @Override
+    public JobApplicationPageResponse getAllMyPendingJobApplications(int page, int size, String sortBy, String sortDir) {
+
+        String userEmail = loggedInUser.getCurrentLoggedInUser();
+
+        if (!loggedInUser.isRecruiter()) {
+            throw new InvalidAccessException("You are Unauthorised to access this endpoint.");
+        }
+
+        Sort sort = sortDir.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        Page<JobApplication> jobApplications = jobApplicationRepository.findAllMyPendingJobApplications(userEmail, pageable);
+        if (jobApplications.isEmpty()) {
+            throw new ResourceNotFoundException("JobApplications");
+        }
+
+        return JobApplicationPageResponse.builder()
+                .jobApplicationResponses(jobApplications.map(jobApplicationMapper::toJobApplicationResponseFromJobApplication).getContent())
+                .isLastPage(jobApplications.isLast())
+                .totalPages(jobApplications.getTotalPages())
+                .totalElements((int) jobApplications.getTotalElements())
+                .pageSize(jobApplications.getSize())
+                .pageIndex(jobApplications.getNumber())
+                .sortBy(sortBy)
+                .sortDir(sortDir)
+                .build();
+    }
+
     @KafkaListener(topics = CANDIDATE_PROFILE_RESPONSES, groupId = JOB_SERVICE_GROUP)
     public void consumeCandidateProfile(CandidateProfileEvent candidateProfileEvent) {
         Job job = jobRepository.findByJobIdIgnoringUserEmail(candidateProfileEvent.jobId()).orElseThrow(
@@ -307,6 +395,16 @@ public class JobServiceImpl implements JobService {
     private void sendCustomEmail(ProfileResponse profileResponse, Job job) {
         log.info("Triggering application confirmation email → {}", profileResponse.email());
         emailService.sendJobApplicationToEmail(profileResponse, job);
+    }
+
+    private void sendJobApplicationAcceptedCustomEmail(ProfileResponse profileResponse, JobApplication jobApplication, JobApplicationRequest jobApplicationRequest) {
+        log.info("Triggering application accepted email → {}", profileResponse.email());
+        emailService.sendJobApplicationAcceptedToEmail(profileResponse, jobApplication, jobApplicationRequest);
+    }
+
+    private void sendJobApplicationRejectedCustomEmail(ProfileResponse profileResponse, Job job) {
+        log.info("Triggering application rejected email → {}", profileResponse.email());
+        emailService.sendJobApplicationRejectedToEmail(profileResponse, job);
     }
 
 }

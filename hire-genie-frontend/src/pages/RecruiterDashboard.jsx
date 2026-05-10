@@ -6,11 +6,13 @@ const StatCard = ({ icon, label, description, onClick, accent = 'blue' }) => {
     blue: 'border-blue-500/30 hover:border-blue-400/60 bg-blue-500/5',
     purple: 'border-purple-500/30 hover:border-purple-400/60 bg-purple-500/5',
     emerald: 'border-emerald-500/30 hover:border-emerald-400/60 bg-emerald-500/5',
+    amber: 'border-amber-500/30 hover:border-amber-400/60 bg-amber-500/5',
   };
   const iconAccents = {
     blue: 'bg-blue-600/20 text-blue-400',
     purple: 'bg-purple-600/20 text-purple-400',
     emerald: 'bg-emerald-600/20 text-emerald-400',
+    amber: 'bg-amber-600/20 text-amber-400',
   };
 
   return (
@@ -52,8 +54,8 @@ const RecruiterDashboard = () => {
           </p>
         </div>
 
-        {/* Action Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mb-10">
+        {/* Action Cards — now 4 cards, 2x2 on md, 4-col on lg */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           <StatCard
             icon="🏢"
             label="Companies"
@@ -75,6 +77,13 @@ const RecruiterDashboard = () => {
             onClick={() => navigate('/recruiter/jobs')}
             accent="emerald"
           />
+          <StatCard
+            icon="📋"
+            label="Applications"
+            description="Review pending candidate applications. Accept and schedule interviews or reject."
+            onClick={() => navigate('/recruiter/pending-applications')}
+            accent="amber"
+          />
         </div>
 
         {/* Quick Info */}
@@ -86,6 +95,7 @@ const RecruiterDashboard = () => {
               { step: '2', text: 'Navigate to Jobs and post new listings under your companies.' },
               { step: '3', text: 'Use AI Recommend on any job to get best-fit candidates instantly.' },
               { step: '4', text: 'Use the 🎭 Roleplay button to generate AI interview questions for any role.' },
+              { step: '5', text: 'Visit Applications to review pending requests — accept with interview details or reject.' },
             ].map(({ step, text }) => (
               <div key={step} className="flex items-start gap-3">
                 <span className="shrink-0 w-6 h-6 bg-blue-600/20 border border-blue-500/40 text-blue-400

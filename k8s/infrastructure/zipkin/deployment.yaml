@@ -1,0 +1,67 @@
+# ==============================================================
+# Hire Genie — Zipkin Deployment
+# Path: k8s/infrastructure/zipkin/deployment.yaml
+#
+# What this file does:
+#   - Tells Kubernetes to always keep 1 copy of Zipkin running
+#   - Uses the same Docker image as your docker-compose.yaml
+#   - Sets the STORAGE_TYPE=mem environment variable (same as compose)
+#   - Configures a health check so K8s knows when Zipkin is ready
+# ==============================================================
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hire-genie-zipkin
+  namespace: hire-genie
+  labels:
+    app: hire-genie-zipkin
+    layer: infrastructure
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hire-genie-zipkin
+  template:
+    metadata:
+      labels:
+        app: hire-genie-zipkin
+        layer: infrastructure
+    spec:
+      containers:
+        - name: zipkin
+          image: openzipkin/zipkin:latest
+          ports:
+            - containerPort: 9411
+              name: http
+
+          env:
+            - name: STORAGE_TYPE
+              value: "mem"
+
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "100m"
+            limits:
+              memory: "512Mi"
+              cpu: "300m"
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 9411
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 9411
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 5
+
+      restartPolicy: Always

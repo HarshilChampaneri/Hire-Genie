@@ -8,13 +8,11 @@ export const SkillsSection = () => {
   const [skills, setSkills] = useState(null); // Map<String, List<String>>
   const [loading, setLoading] = useState(true);
   const [aiLoading, setAiLoading] = useState(false);
-  const [customPrompt, setCustomPrompt] = useState('');
-  const [showPrompt, setShowPrompt] = useState(false);
+  const [rawSkills, setRawSkills] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
   useEffect(() => {
-    
     const fetchSkills = async () => {
       try {
         const { data } = await resumeService.getSkills(token);
@@ -23,53 +21,85 @@ export const SkillsSection = () => {
       finally { setLoading(false); }
     };
 
-    fetchSkills(); }, []);
+    fetchSkills();
+  }, []);
 
   const handleGenerate = async () => {
+    if (!rawSkills.trim()) {
+      setError('Please enter your skills before generating.');
+      return;
+    }
     setAiLoading(true); setError(''); setSuccess('');
     try {
-      const { data } = await resumeService.generateSkillSummary(customPrompt || '', token);
+      const { data } = await resumeService.generateSkillSummary(rawSkills.trim(), token);
       setSkills(data.technicalSkills || null);
-      setSuccess('✨ Skills generated from your profile! They\'ve been saved automatically.');
-    } catch { setError('AI skill generation failed. Make sure your profile and experience are filled in first.'); }
-    finally { setAiLoading(false); }
+      setSuccess('✨ Skills categorized and saved automatically!');
+    } catch {
+      setError('AI skill categorization failed. Please try again.');
+    } finally {
+      setAiLoading(false);
+    }
   };
 
-  if (loading) return <div className="flex justify-center py-12"><div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" /></div>;
+  if (loading) return (
+    <div className="flex justify-center py-12">
+      <div className="w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
           <h3 className="text-xl font-bold text-white">Skills</h3>
-          <p className="text-slate-400 text-sm mt-1">AI-powered skill extraction from your profile & experience</p>
+          <p className="text-slate-400 text-sm mt-1">Enter your skills and let AI organize them into categories</p>
         </div>
       </div>
 
-      {error && <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm rounded-xl p-3 mb-4">{error}</div>}
-      {success && <div className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-sm rounded-xl p-3 mb-4">{success}</div>}
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/50 text-red-400 text-sm rounded-xl p-3 mb-4">
+          {error}
+        </div>
+      )}
+      {success && (
+        <div className="bg-emerald-500/10 border border-emerald-500/50 text-emerald-400 text-sm rounded-xl p-3 mb-4">
+          {success}
+        </div>
+      )}
 
       <div className="bg-violet-500/5 border border-violet-500/20 rounded-2xl p-5 mb-6">
         <div className="flex items-start gap-3">
           <span className="text-2xl">🤖</span>
           <div className="flex-1">
-            <h4 className="text-white font-semibold mb-1">AI Skill Analyzer</h4>
-            <p className="text-slate-400 text-sm mb-4">Our AI analyzes your experience, projects, and profile to automatically categorize your technical skills. You can also provide a custom prompt to refine the output.</p>
-            <button type="button" onClick={() => setShowPrompt(p => !p)}
-              className="text-violet-400 hover:text-violet-300 text-sm underline mb-3 transition-colors">
-              {showPrompt ? 'Hide custom prompt ↑' : 'Add custom prompt (optional) ↓'}
-            </button>
-            {showPrompt && (
-              <textarea value={customPrompt} onChange={e => setCustomPrompt(e.target.value)} rows={3}
-                placeholder="e.g. Focus on backend and cloud technologies. Include Docker, Kubernetes, and AWS prominently."
-                className="w-full bg-slate-700/50 border border-slate-600 focus:border-violet-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none transition-all resize-none text-sm mb-3" />
-            )}
-            <button onClick={handleGenerate} disabled={aiLoading}
-              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all">
+            <h4 className="text-white font-semibold mb-1">AI Skill Organizer</h4>
+            <p className="text-slate-400 text-sm mb-4">
+              Enter all your skills as a comma-separated list. Our AI will analyze them and automatically
+              group them into relevant categories like <span className="text-slate-300 italic">Backend &amp; Core</span>, <span className="text-slate-300 italic">DevOps &amp; Tools</span>, <span className="text-slate-300 italic">Frontend</span>, and more.
+            </p>
+
+            <label className="block text-slate-300 text-xs font-semibold uppercase tracking-wider mb-2">
+              Your Skills <span className="text-red-400">*</span>
+            </label>
+            <textarea
+              value={rawSkills}
+              onChange={e => setRawSkills(e.target.value)}
+              rows={3}
+              placeholder="e.g. Java, Spring Boot, Docker, Kubernetes, Kafka, Microservices, Hibernate, Spring Security, React, PostgreSQL, Redis…"
+              className="w-full bg-slate-700/50 border border-slate-600 focus:border-violet-500 rounded-xl px-4 py-3 text-white placeholder-slate-500 outline-none transition-all resize-none text-sm mb-1"
+            />
+            <p className="text-slate-500 text-xs mb-4">
+              Separate each skill with a comma. The more skills you enter, the better the categorization.
+            </p>
+
+            <button
+              onClick={handleGenerate}
+              disabled={aiLoading || !rawSkills.trim()}
+              className="flex items-center gap-2 bg-violet-600 hover:bg-violet-500 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
-              {aiLoading ? 'Analyzing…' : skills ? 'Regenerate Skills' : 'Generate Skills with AI'}
+              {aiLoading ? 'Organizing…' : skills ? 'Re-organize Skills' : 'Organize Skills with AI'}
             </button>
           </div>
         </div>
@@ -93,7 +123,7 @@ export const SkillsSection = () => {
       ) : (
         <div className="text-center py-12 text-slate-500">
           <div className="text-4xl mb-3">🎯</div>
-          <p>No skills generated yet. Fill in your experiences and projects, then click Generate.</p>
+          <p>No skills yet. Enter your skills above and click <span className="text-slate-400">Organize Skills with AI</span>.</p>
         </div>
       )}
     </div>

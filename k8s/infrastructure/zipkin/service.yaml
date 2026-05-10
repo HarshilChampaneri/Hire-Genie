@@ -1,0 +1,28 @@
+# ==============================================================
+# Hire Genie — Zipkin Service
+# Path: k8s/infrastructure/zipkin/service.yaml
+#
+# What this file does:
+#   - Creates a stable internal address "hire-genie-zipkin" inside the cluster
+#   - Any other service can reach Zipkin at: http://hire-genie-zipkin:9411
+#   - This replaces the docker-compose "networks: hire-genie-network" concept
+#   - In Kubernetes, services talk to each other by Service name, not container name
+# ==============================================================
+apiVersion: v1
+kind: Service
+metadata:
+  name: hire-genie-zipkin
+  namespace: hire-genie
+  labels:
+    app: hire-genie-zipkin
+    layer: infrastructure
+spec:
+  selector:
+    app: hire-genie-zipkin
+
+  ports:
+    - name: http
+      port: 9411
+      targetPort: 9411
+
+  type: ClusterIP

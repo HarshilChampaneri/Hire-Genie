@@ -6,7 +6,6 @@ import com.hire_genie.job_service.dto.company.response.CompanyResponse;
 import com.hire_genie.job_service.service.CompanyService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

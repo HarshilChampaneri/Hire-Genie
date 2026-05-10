@@ -36,6 +36,8 @@ const JobFormModal = ({ isOpen, onClose, onSubmit, editData = null, companies = 
     () => companies[0]?.companyId?.toString() || ''
   );
 
+  // const [selectedCompanyId, setSelectedCompanyId] = useState('');
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {
