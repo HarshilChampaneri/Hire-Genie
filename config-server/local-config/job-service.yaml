@@ -1,0 +1,87 @@
+spring:
+
+  # DB-Configurations:
+  datasource:
+    url: ${POSTGRES_URL_JOB_SERVICE}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+  # Redis-Configurations:
+  data:
+    redis:
+      url: ${REDIS_URL}
+      database: 0
+      timeout: 60000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+          max-wait: -1ms
+
+  # Cache-Configurations:
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+
+  # Kafka-Configurations:
+  kafka:
+    bootstrap-servers: localhost:9094
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.type.mapping: "appEvent:com.hire_genie.job_service.kafkaEvent.JobApplicationEvent,profileEvent:com.hire_genie.job_service.kafkaEvent.CandidateProfileEvent"
+    consumer:
+      group-id: job-service-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+        spring.json.type.mapping: "appEvent:com.hire_genie.job_service.kafkaEvent.JobApplicationEvent,profileEvent:com.hire_genie.job_service.kafkaEvent.CandidateProfileEvent"
+
+  # Java Mail Sender Application:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    default-encoding: UTF-8
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+
+# Security-Configurations:
+app:
+  security:
+    internal-secret: ${INTERNAL_SECRET}
+
+# Port-Configurations:
+server:
+  port: 9091
+
+# Feign-Client Configurations:
+services:
+  job-recommendation:
+    url: http://localhost:9093
+  employee-recommendation-engine:
+    url: http://localhost:9097
+  roleplay-service:
+    url: http://localhost:9095
+  resume-builder:
+    url: http://localhost:9090
+
+# OpenAPI Configurations:
+springdoc:
+  api-docs:
+    path: /api/jobs/v3/api-docs
+  swagger-ui:
+    path: /api/jobs/swagger-ui.html
+  server-url: http://localhost:8080

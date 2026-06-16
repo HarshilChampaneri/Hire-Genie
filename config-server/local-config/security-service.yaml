@@ -1,0 +1,59 @@
+server:
+  port: 9096
+
+spring:
+  # Thread Configurations:
+  threads:
+    virtual:
+      enabled: true
+  data:
+    # MongoDB Configurations:
+    mongodb:
+      uri: ${MONGODB_URL}
+      auto-index-creation: true
+    # Redis Configurations:
+    redis:
+      url: ${REDIS_URL}
+      database: 0
+      timeout: 60000ms
+      lettuce:
+        pool:
+          max-active: 10
+          max-idle: 5
+          min-idle: 1
+          max-wait: -1ms
+  # Mail Configurations:
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+  # Cache Configurations:
+  cache:
+    type: redis
+    redis:
+      time-to-live: 600000
+      cache-null-values: false
+
+# App Security Configurations:
+app:
+  security:
+    jwt-secret: ${JWT_SECRET}
+    jwt-expiration-ms: 86400000
+    admin-secret: ${ADMIN_SECRET_KEY}
+    internal-secret: ${INTERNAL_SECRET}
+
+# OpenAPI Configurations:
+springdoc:
+  api-docs:
+    path: /api/security/v3/api-docs
+  swagger-ui:
+    path: /api/security/swagger-ui.html
+  server-url: http://localhost:8080

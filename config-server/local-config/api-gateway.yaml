@@ -1,0 +1,54 @@
+spring:
+
+  threads:
+    virtual:
+      enabled: true
+
+  # API-Gateway Configurations:
+  cloud:
+    gateway:
+      mvc:
+        routes:
+          - id: security-service
+            uri: lb://SECURITY-SERVICE
+            predicates:
+              - Path=/api/security/**
+
+          - id: resume-builder
+            uri: lb://RESUME-BUILDER
+            predicates:
+              - Path=/api/resumes/**
+
+          - id: job-service
+            uri: lb://JOB-SERVICE
+            predicates:
+              - Path=/api/jobs/**
+
+# Gateway Security Configurations:
+app:
+  security:
+    jwt-secret: ${JWT_SECRET}
+    internal-secret: ${INTERNAL_SECRET}
+
+# OpenAPI Swagger Configurations:
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Security Service
+        url: /api/security/v3/api-docs
+      - name: Resume Builder
+        url: /api/resumes/v3/api-docs
+      - name: Job Service
+        url: /api/jobs/v3/api-docs
+      - name: Job Recommendation
+        url: /api/jobs-recommendation/v3/api-docs
+      - name: Employee Recommendation
+        url: /api/employees-recommendation/v3/api-docs
+      - name: Roleplay Service
+        url: /api/roleplay/v3/api-docs
+      - name: API Gateway
+        url: /v3/api-docs
+
+# Port Configurations:
+server:
+  port: 8080

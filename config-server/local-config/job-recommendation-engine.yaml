@@ -1,0 +1,49 @@
+spring:
+  # AI-Configurations:
+  ai:
+    google:
+      genai:
+        api-key: ${GOOGLE_GENAI_API_KEY}
+        chat:
+          options:
+            model: gemini-3-flash-preview
+            temperature: 0.7
+
+        # Embedding Model Configurations:
+        embedding:
+          api-key: ${GOOGLE_GENAI_API_KEY}
+          text:
+            options:
+              model: gemini-embedding-2-preview
+              dimensions: 768
+
+    # VectorStore-Configurations:
+    vectorstore:
+      pgvector:
+        initialize-schema: true
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 768
+
+  # DB-Configurations:
+  datasource:
+    url: ${POSTGRES_URL_JOB_RECOMMENDATION_SERVICE}
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+
+app:
+  security:
+    internal-secret: ${INTERNAL_SECRET}
+
+# Port-Configurations:
+server:
+  port: 9093
+
+# OpenAPI Configurations:
+springdoc:
+  api-docs:
+    path: /api/jobs-recommendation/v3/api-docs
+  swagger-ui:
+    path: /api/jobs-recommendation/swagger-ui.html
+  server-url: http://localhost:8080

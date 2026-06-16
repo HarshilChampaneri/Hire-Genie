@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
     // Derived booleans — role strings match Spring Security GrantedAuthority format
     const isAuthenticated = !!token;
     const isRecruiter     = roles.includes('ROLE_RECRUITER');
+    const isAdmin          = roles.includes('ROLE_ADMIN');
 
     useEffect(() => {
         if (token) {
@@ -66,7 +67,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ token, isAuthenticated, isRecruiter, loginUser, logoutUser }}>
+        <AuthContext.Provider value={{ token, isAuthenticated, isRecruiter, isAdmin, loginUser, logoutUser }}>
             {children}
         </AuthContext.Provider>
     );

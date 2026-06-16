@@ -1,0 +1,36 @@
+spring:
+  # AI-Configurations:
+  ai:
+    google:
+      genai:
+        api-key: ${GOOGLE_GENAI_API_KEY}
+        chat:
+          options:
+            model: gemini-3-flash-preview
+            temperature: 0.7
+
+# Security-Configurations:
+app:
+  security:
+    internal-secret: ${INTERNAL_SECRET}
+
+# Port-Configurations:
+server:
+  port: 9095
+
+# OpenAPI Configurations:
+springdoc:
+  api-docs:
+    path: /api/roleplay/v3/api-docs
+  swagger-ui:
+    path: /api/roleplay/swagger-ui.html
+  server-url: http://localhost:8080
+
+# Zipkin Configurations:
+management:
+  tracing:
+    sampling:
+      probability: 1.0
+  zipkin:
+    tracing:
+      endpoint: http://localhost:9411/api/v2/spans
