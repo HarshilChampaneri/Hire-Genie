@@ -6,7 +6,10 @@ import com.hire_genie.job_service.dto.job.response.JobPageResponse;
 import com.hire_genie.job_service.dto.job.response.JobResponse;
 import com.hire_genie.job_service.dto.jobApplication.JobApplicationPageResponse;
 import com.hire_genie.job_service.dto.jobApplication.JobApplicationRequest;
+import com.hire_genie.job_service.dto.maliciousTextDetector.MaliciousTextDetectorResponse;
 import com.hire_genie.job_service.dto.roleplay.RoleplayDTO;
+import com.hire_genie.job_service.enums.Category;
+import com.hire_genie.job_service.enums.Verdict;
 import com.hire_genie.job_service.exception.InvalidAccessException;
 import com.hire_genie.job_service.exception.ResourceNotFoundException;
 import com.hire_genie.job_service.feignClient.EmployeeRecommendationServiceFeignClient;
@@ -20,6 +23,7 @@ import com.hire_genie.job_service.mapper.JobMapper;
 import com.hire_genie.job_service.model.Company;
 import com.hire_genie.job_service.model.Job;
 import com.hire_genie.job_service.model.JobApplication;
+import com.hire_genie.job_service.prompts.MaliciousTextDetector;
 import com.hire_genie.job_service.repository.CompanyRepository;
 import com.hire_genie.job_service.repository.JobApplicationRepository;
 import com.hire_genie.job_service.repository.JobRepository;
@@ -29,10 +33,17 @@ import com.hire_genie.job_service.service.JobService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,7 +55,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
+import static com.hire_genie.job_service.prompts.MaliciousTextDetector.MALICIOUS_TEXT_DETECTOR_SYSTEM_PROMPT;
 import static com.hire_genie.job_service.util.StaticConstants.*;
 
 @Slf4j
@@ -64,6 +78,7 @@ public class JobServiceImpl implements JobService {
     private final EmployeeRecommendationServiceFeignClient employeeRecommendationServiceFeignClient;
     private final RoleplayServiceFeignClient roleplayServiceFeignClient;
     private final ResumeBuilderServiceFeignClient resumeBuilderServiceFeignClient;
+    private final ChatClient chatClient;
 
     @Override
     @Transactional
@@ -371,6 +386,47 @@ public class JobServiceImpl implements JobService {
                 .sortBy(sortBy)
                 .sortDir(sortDir)
                 .build();
+    }
+
+    @Override
+    @Transactional
+    public List<ProfileResponse> searchForEmployee(String text) {
+
+        BeanOutputConverter<MaliciousTextDetectorResponse> outputConverter = new BeanOutputConverter<>(MaliciousTextDetectorResponse.class);
+
+        String systemPrompt = MALICIOUS_TEXT_DETECTOR_SYSTEM_PROMPT.replace("{format}", outputConverter.getFormat());
+
+        MaliciousTextDetectorResponse verdict;
+
+        try {
+            ChatResponse chatResponse = chatClient
+                    .prompt()
+                    .system(systemPrompt)
+                    .user(text)
+                    .call()
+                    .chatResponse();
+
+            String rawJson = Objects.requireNonNull(chatResponse)
+                    .getResult()
+                    .getOutput()
+                    .getText();
+            log.info("Raw AI response: {}", rawJson);
+
+            verdict = outputConverter.convert(rawJson);
+            log.info("Parsed verdict: {}", verdict);
+        } catch (Exception e) {
+            log.warn("Malicious-text gaurd failed for query [{}], blocking by default", text, e);
+            throw new InvalidAccessException("Enter a valid Search Message!!");
+        }
+
+        if (verdict.verdict() == Verdict.BLOCKED || verdict.category() != Category.SAFE) {
+            throw new InvalidAccessException("Enter a valid Search Message!!");
+        }
+
+        //TODO: RAG Pipeline of Employee Search Feature for Recruiters!!
+
+        return null;
+
     }
 
     @KafkaListener(topics = CANDIDATE_PROFILE_RESPONSES, groupId = JOB_SERVICE_GROUP)

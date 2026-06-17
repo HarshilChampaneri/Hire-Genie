@@ -37,4 +37,6 @@ public interface JobService {
 
     JobApplicationPageResponse getAllMyPendingJobApplications(int page, int size, String sortBy, String sortDir);
 
+    List<ProfileResponse> searchForEmployee(String text);
+
 }

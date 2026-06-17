@@ -113,4 +113,11 @@ public class JobController {
         return ResponseEntity.ok(jobService.getAllMyPendingJobApplications(page, size, sortBy, sortDir));
     }
 
+    @GetMapping("/recommend/employees")
+    public ResponseEntity<List<ProfileResponse>> searchForEmployee(
+            @RequestBody String text
+    ) {
+        return ResponseEntity.ok(jobService.searchForEmployee(text));
+    }
+
 }
