@@ -7,12 +7,14 @@ const StatCard = ({ icon, label, description, onClick, accent = 'blue' }) => {
     purple: 'border-purple-500/30 hover:border-purple-400/60 bg-purple-500/5',
     emerald: 'border-emerald-500/30 hover:border-emerald-400/60 bg-emerald-500/5',
     amber: 'border-amber-500/30 hover:border-amber-400/60 bg-amber-500/5',
+    cyan: 'border-cyan-500/30 hover:border-cyan-400/60 bg-cyan-500/5',
   };
   const iconAccents = {
     blue: 'bg-blue-600/20 text-blue-400',
     purple: 'bg-purple-600/20 text-purple-400',
     emerald: 'bg-emerald-600/20 text-emerald-400',
     amber: 'bg-amber-600/20 text-amber-400',
+    cyan: 'bg-cyan-600/20 text-cyan-400',
   };
 
   return (
@@ -54,7 +56,7 @@ const RecruiterDashboard = () => {
           </p>
         </div>
 
-        {/* Action Cards — now 4 cards, 2x2 on md, 4-col on lg */}
+        {/* Action Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
           <StatCard
             icon="🏢"
@@ -84,6 +86,13 @@ const RecruiterDashboard = () => {
             onClick={() => navigate('/recruiter/pending-applications')}
             accent="amber"
           />
+          <StatCard
+            icon="📄"
+            label="Resume Builder"
+            description="Build or polish your own professional resume using our guided AI-powered resume builder."
+            onClick={() => navigate('/resume-builder')}
+            accent="cyan"
+          />
         </div>
 
         {/* Quick Info */}
@@ -96,6 +105,7 @@ const RecruiterDashboard = () => {
               { step: '3', text: 'Use AI Recommend on any job to get best-fit candidates instantly.' },
               { step: '4', text: 'Use the 🎭 Roleplay button to generate AI interview questions for any role.' },
               { step: '5', text: 'Visit Applications to review pending requests — accept with interview details or reject.' },
+              { step: '6', text: 'Use Resume Builder anytime to create or update your own resume.' },
             ].map(({ step, text }) => (
               <div key={step} className="flex items-start gap-3">
                 <span className="shrink-0 w-6 h-6 bg-blue-600/20 border border-blue-500/40 text-blue-400

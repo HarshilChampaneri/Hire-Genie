@@ -415,7 +415,7 @@ public class JobServiceImpl implements JobService {
             verdict = outputConverter.convert(rawJson);
             log.info("Parsed verdict: {}", verdict);
         } catch (Exception e) {
-            log.warn("Malicious-text gaurd failed for query [{}], blocking by default", text, e);
+            log.warn("Malicious-text guard failed for query [{}], blocking by default", text, e);
             throw new InvalidAccessException("Enter a valid Search Message!!");
         }
 
@@ -423,9 +423,7 @@ public class JobServiceImpl implements JobService {
             throw new InvalidAccessException("Enter a valid Search Message!!");
         }
 
-        //TODO: RAG Pipeline of Employee Search Feature for Recruiters!!
-
-        return null;
+        return employeeRecommendationServiceFeignClient.recommendEmployees(text);
 
     }
 
