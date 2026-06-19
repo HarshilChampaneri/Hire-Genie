@@ -75,4 +75,14 @@ export const jobService = {
   rejectApplicant: (jobApplicationId, token) =>
     axios.post(`${BASE}/reject/applicant/${jobApplicationId}`, {}, authHeader(token)),
 
+  // ─── Global Employee Search (All Roles) ──────────────────────────────────────
+  // Backend controller: @GetMapping("/recommend/employees") with @RequestParam String text.
+  // Sent as a query param (not a body) because browsers strip the body off GET requests.
+
+  searchEmployees: (text, token) =>
+    axios.get(`${BASE}/recommend/employees`, {
+      ...authHeader(token),
+      params: { text },
+    }),
+
 };

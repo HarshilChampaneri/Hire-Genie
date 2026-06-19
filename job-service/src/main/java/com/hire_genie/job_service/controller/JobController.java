@@ -115,7 +115,7 @@ public class JobController {
 
     @GetMapping("/recommend/employees")
     public ResponseEntity<List<ProfileResponse>> searchForEmployee(
-            @RequestBody String text
+            @RequestParam("text") String text
     ) {
         return ResponseEntity.ok(jobService.searchForEmployee(text));
     }

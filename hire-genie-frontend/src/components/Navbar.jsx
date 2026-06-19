@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import ProfileModal from './ProfileModal';
+import EmployeeSearchBar from './EmployeeSearchBar';
 
 const Navbar = () => {
   const { logoutUser, token, isRecruiter } = useAuth();
@@ -20,16 +21,21 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="w-full bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
+      <nav className="w-full bg-slate-800 border-b border-slate-700 px-6 py-4 flex items-center gap-4 flex-wrap lg:flex-nowrap">
         {/* Brand */}
         <button
           onClick={() => navigate(dashboardPath)}
-          className="text-blue-400 font-bold text-xl hover:text-blue-300 transition-colors"
+          className="text-blue-400 font-bold text-xl hover:text-blue-300 transition-colors shrink-0"
         >
           Hire-Genie
         </button>
 
-        <div className="flex items-center gap-3">
+        {/* Global candidate search */}
+        <div className="order-3 w-full lg:order-0 lg:w-auto lg:flex-1 lg:flex lg:justify-center">
+          <EmployeeSearchBar />
+        </div>
+
+        <div className="flex items-center gap-3 ml-auto shrink-0">
           <span className="text-slate-400 text-sm hidden sm:block">
             {token ? '🟢 Logged in' : ''}
           </span>
